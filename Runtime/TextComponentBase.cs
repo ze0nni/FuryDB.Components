@@ -3,7 +3,9 @@ using UnityEngine;
 
 namespace FDB.Components
 {
-    public abstract class TextComponentBase<TDB, TConfig> : MonoBehaviour where TConfig : class
+    public abstract class TextComponentBase<TDB, TConfig, TTextResolver> : MonoBehaviour 
+        where TConfig : class
+        where TTextResolver : struct, ITextResolver<TConfig>
     {
         [SerializeField] TextValue<TDB, TConfig> _text;
         object[] _args;
@@ -76,15 +78,12 @@ namespace FDB.Components
         }
 
 #if UNITY_EDITOR
-        void OnValidate()
+        public virtual void OnValidate()
         {
             _isDirty = false;
             SetDirty();
         }
 #endif
-
-        protected abstract Index<TConfig> Index { get; }
-        protected abstract string GetText(TConfig config);
         protected abstract void Render(string text);
 
         private bool _isDirty = false;
@@ -121,7 +120,7 @@ namespace FDB.Components
             Index<TConfig> index;
 #if UNITY_EDITOR
             index = Application.isPlaying
-                ? Index
+                ? default(TTextResolver).Index
                 : (Index<TConfig>)FDB.Editor.EditorDB<TDB>.Resolver.GetIndex(typeof(TConfig));
 #else
             index = Index;
@@ -131,7 +130,7 @@ namespace FDB.Components
             {
                 index.TryGet(new Kind<TConfig>(_text.Value), out var config);
                 format = config != null
-                    ? GetText(config)
+                    ? default(TTextResolver).GetText(config)
                     : _text.Value;
             }
             else
@@ -148,9 +147,9 @@ namespace FDB.Components
 
         private class RenderTask : IEnumerator
         {
-            readonly TextComponentBase<TDB, TConfig> _text;
+            readonly TextComponentBase<TDB, TConfig, TTextResolver> _text;
 
-            public RenderTask(TextComponentBase<TDB, TConfig> text)
+            public RenderTask(TextComponentBase<TDB, TConfig, TTextResolver> text)
             {
                 _text = text;
             }
@@ -178,5 +177,12 @@ namespace FDB.Components
                 _index = 0;
             }
         }
+    }
+
+    public interface ITextResolver<TConfig>
+        where TConfig : class
+    {
+        Index<TConfig> Index { get; }
+        string GetText(TConfig config);
     }
 }

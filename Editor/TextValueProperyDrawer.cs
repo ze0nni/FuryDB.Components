@@ -17,6 +17,12 @@ namespace FDB.Components.Editor
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            if (GCache.Error != null)
+            {
+                EditorGUI.HelpBox(position, GCache.Error, MessageType.Error);
+                return;
+            }
+
             var translateProp = property.FindPropertyRelative("Translate");
             var valueProp = property.FindPropertyRelative("Value");
 
@@ -72,6 +78,7 @@ namespace FDB.Components.Editor
 
         struct GenericCache
         {
+            public string Error;
             public Func<string, bool> ValidateKind;
             public Func<IEnumerable<string>> GetKinds;
         }
@@ -87,28 +94,47 @@ namespace FDB.Components.Editor
         {
             if (!_genericCache.TryGetValue(textValueType, out var cache))
             {
-                var types = textValueType.GetGenericArguments();
-                var dbType = types[0];
-                var configType = types[1];
-                var configKind = configType.GetField("Kind");
-                var editorDBType = typeof(EditorDB<>).MakeGenericType(dbType);
-                var get_Resolver = editorDBType.GetMethod("get_Resolver", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
-
-                var invokeArgs = new object[] { };
-                cache = new GenericCache
+                try
                 {
-                    ValidateKind = k =>
+                    var types = textValueType.GetGenericArguments();
+                    var dbType = types[0];
+                    var configType = types[1];
+                    var configKind = configType.GetField("Kind");
+                    var editorDBType = typeof(EditorDB<>).MakeGenericType(dbType);
+                    var get_Resolver = editorDBType.GetMethod("get_Resolver", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+
+                    var invokeArgs = new object[] { };
+                    var resolver = (DBResolver)get_Resolver.Invoke(null, invokeArgs);
+                    if (resolver == null)
                     {
-                        var resolver = (DBResolver)get_Resolver.Invoke(null, invokeArgs);
-                        var index = resolver.GetIndex(configType);
-                        return index.TryGet(k, out _);
-                    },
-                    GetKinds = () => {
-                        var resolver = (DBResolver)get_Resolver.Invoke(null, invokeArgs);
-                        var index = resolver.GetIndex(configType);
-                        return index.All().Cast<object>().Select(o => ((Kind)configKind.GetValue(o)).Value);
+                        throw new NullReferenceException($"Database with type ${dbType} not exists");
                     }
-                };
+
+                    var index = resolver.GetIndex(configType);
+                    if (index == null)
+                    {
+                        throw new NullReferenceException($"Type Index<{configType.Name}> not found in {dbType.Name}");
+                    }
+
+                    cache = new GenericCache
+                    {
+                        ValidateKind = k =>
+                        {
+                            return index.TryGet(k, out _);
+                        },
+                        GetKinds = () =>
+                        {
+                            return index.All().Cast<object>().Select(o => ((Kind)configKind.GetValue(o)).Value);
+                        }
+                    };
+                } catch (Exception exc)
+                {
+                    Debug.LogException(exc);
+                    cache = new GenericCache
+                    {
+                        Error = exc.Message
+                    };
+                }
                 _genericCache.Add(textValueType, cache);
             }
             return cache;

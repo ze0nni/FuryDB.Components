@@ -17,6 +17,12 @@ namespace FDB.Components.Editor
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            if (GCache.Error != null)
+            {
+                EditorGUI.HelpBox(position, GCache.Error, MessageType.Error);
+                return;
+            }
+
             var rawProp = property.FindPropertyRelative("_raw");
             var rawValueProp = property.FindPropertyRelative("_rawValue");
             var valueProp = property.FindPropertyRelative("_value");
@@ -90,6 +96,7 @@ namespace FDB.Components.Editor
 
         struct GenericCache
         {
+            public string Error;
             public Func<string, Index> GetIndex;
             public Func<IEnumerable<string>> GetKinds;
             public Func<string, Color[]> GetColors;
@@ -106,43 +113,64 @@ namespace FDB.Components.Editor
         {
             if (!_genericCache.TryGetValue(colorValueType, out var cache))
             {
-                var types = colorValueType.BaseType.GetGenericArguments();
-                var dbType = types[0];
-                var configType = types[1];
-                var configKind = configType.GetField("Kind");
-                var colorResolverType = types[2];
-
-                var editorDBType = typeof(EditorDB<>).MakeGenericType(dbType);
-                var get_Resolver = editorDBType.GetMethod("get_Resolver", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
-
-                var colorResolver = Activator.CreateInstance(colorResolverType);
-                var getColors = colorResolverType.GetMethod("GetColors");
-
-                var invokeArgs = new object[] { };
-                cache = new GenericCache
+                try
                 {
-                    GetIndex = k =>
+                    var types = colorValueType.BaseType.GetGenericArguments();
+                    var dbType = types[0];
+                    var configType = types[1];
+                    var configKind = configType.GetField("Kind");
+                    var colorResolverType = types[2];
+
+                    var editorDBType = typeof(EditorDB<>).MakeGenericType(dbType);
+                    var get_Resolver = editorDBType.GetMethod("get_Resolver", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+
+                    var colorResolver = Activator.CreateInstance(colorResolverType);
+                    var getColors = colorResolverType.GetMethod("GetColors");
+
+                    var resolver = (DBResolver)get_Resolver.Invoke(null, new object[] { });
+                    if (resolver == null)
                     {
-                        var resolver = (DBResolver)get_Resolver.Invoke(null, invokeArgs);
-                        var index = resolver.GetIndex(configType);
-                        return index;
-                    },
-                    GetKinds = () => {
-                        var resolver = (DBResolver)get_Resolver.Invoke(null, invokeArgs);
-                        var index = resolver.GetIndex(configType);
-                        return index.All().Cast<object>().Select(o => ((Kind)configKind.GetValue(o)).Value);
-                    },
-                    GetColors = kind =>
-                    {
-                        var resolver = (DBResolver)get_Resolver.Invoke(null, invokeArgs);
-                        var config = resolver.GetConfig(configType, kind);
-                        if (config == null)
-                        {
-                            return null;
-                        }
-                        return (Color[])getColors.Invoke(colorResolver, new[] { config });
+                        throw new NullReferenceException($"Database with type ${dbType} not exists");
                     }
-                };
+
+                    var index = resolver.GetIndex(configType);
+                    if (index == null)
+                    {
+                        throw new NullReferenceException($"Type Index<{configType.Name}> not found in {dbType.Name}");
+                    }
+
+                    cache = new GenericCache
+                    {
+                        GetIndex = k =>
+                        {
+                            return index;
+                        },
+                        GetKinds = () =>
+                        {
+                            if (index == null)
+                            {
+                                return null;
+                            }
+                            return index.All().Cast<object>().Select(o => ((Kind)configKind.GetValue(o)).Value);
+                        },
+                        GetColors = kind =>
+                        {
+                            var config = resolver.GetConfig(configType, kind);
+                            if (config == null)
+                            {
+                                return null;
+                            }
+                            return (Color[])getColors.Invoke(colorResolver, new[] { config });
+                        }
+                    };
+                } catch (Exception exc)
+                {
+                    Debug.LogException(exc);
+                    cache = new GenericCache
+                    {
+                        Error = exc.Message
+                    };
+                }
                 _genericCache.Add(colorValueType, cache);
             }
             return cache;

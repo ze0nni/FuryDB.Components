@@ -92,7 +92,6 @@ namespace FDB.Components.Editor
                 var configType = types[1];
                 var configKind = configType.GetField("Kind");
                 var editorDBType = typeof(EditorDB<>).MakeGenericType(dbType);
-                var get_DB = editorDBType.GetMethod("get_DB", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
                 var get_Resolver = editorDBType.GetMethod("get_Resolver", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
 
                 var invokeArgs = new object[] { };

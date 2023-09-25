@@ -1,4 +1,7 @@
 using FDB.Editor;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -51,22 +54,98 @@ namespace FDB.Components.Editor
                 var colorsRect = new Rect(valueRect.x + valueRect.width / 2, valueRect.y, valueRect.width / 2, valueRect.height);
 
                 GUI.Label(labelRect, valueProp.stringValue);
-
                 {
-                    var type = this.fieldInfo.FieldType;
-                    var colorResolverType = type.BaseType.GetGenericArguments()[2];
-                    var colorResolver = System.Activator.CreateInstance(colorResolverType);
+                    var colors = GCache.GetColors(valueProp.stringValue);
 
-                    GUI.color = Color.yellow;
-                    GUI.DrawTexture(colorsRect, FDBEditorIcons.Solid);
-                    GUI.color = Color.white;
+                    if (colors != null && colors.Length > 0) {
+                        var colorRect = new Rect(colorsRect.x, colorsRect.y, colorsRect.width / colors.Length, colorsRect.height);
+                        foreach (var color in colors)
+                        {
+                            GUI.color = color;
+                            GUI.DrawTexture(colorRect, FDBEditorIcons.Solid);
+                            colorRect.x += colorRect.width;
+                        }
+                        GUI.color = Color.white;
+                    }
                 }
 
                 if (GUI.Button(browseRect, new GUIContent(null, FDBEditorIcons.LinkIcon)))
                 {
-                    
+                    var kinds = GCache.GetKinds();
+                    PopupWindow.Show(valueRect, new ColorKindChooseWindow(
+                        valueProp.stringValue,
+                        kinds,
+                        GCache.GetColors,
+                        position.width,
+                        newKind =>
+                    {
+                        valueProp.serializedObject.Update();
+                        valueProp.stringValue = newKind;
+                        valueProp.serializedObject.ApplyModifiedProperties();
+                        GUI.changed = true;
+                    }));
                 }
             }
+        }
+
+        struct GenericCache
+        {
+            public Func<string, Index> GetIndex;
+            public Func<IEnumerable<string>> GetKinds;
+            public Func<string, Color[]> GetColors;
+        }
+
+        static Dictionary<Type, GenericCache> _genericCache = new Dictionary<Type, GenericCache>();
+
+        private GenericCache GCache
+        {
+            get => GetGenericCache(this.fieldInfo.FieldType);
+        }
+
+        static GenericCache GetGenericCache(Type colorValueType)
+        {
+            if (!_genericCache.TryGetValue(colorValueType, out var cache))
+            {
+                var types = colorValueType.BaseType.GetGenericArguments();
+                var dbType = types[0];
+                var configType = types[1];
+                var configKind = configType.GetField("Kind");
+                var colorResolverType = types[2];
+
+                var editorDBType = typeof(EditorDB<>).MakeGenericType(dbType);
+                var get_Resolver = editorDBType.GetMethod("get_Resolver", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+
+                var colorResolver = Activator.CreateInstance(colorResolverType);
+                var getColors = colorResolverType.GetMethod("GetColors");
+
+                var invokeArgs = new object[] { };
+                cache = new GenericCache
+                {
+                    GetIndex = k =>
+                    {
+                        var resolver = (DBResolver)get_Resolver.Invoke(null, invokeArgs);
+                        var index = resolver.GetIndex(configType);
+                        return index;
+                    },
+                    GetKinds = () => {
+                        var resolver = (DBResolver)get_Resolver.Invoke(null, invokeArgs);
+                        var index = resolver.GetIndex(configType);
+                        return index.All().Cast<object>().Select(o => ((Kind)configKind.GetValue(o)).Value);
+                    },
+                    GetColors = kind =>
+                    {
+                        var resolver = (DBResolver)get_Resolver.Invoke(null, invokeArgs);
+                        var config = resolver.GetConfig(configType, kind);
+                        if (config == null)
+                        {
+                            return null;
+                        }
+                        return (Color[])getColors.Invoke(colorResolver, new[] { config });
+                    }
+                };
+                _genericCache.Add(colorValueType, cache);
+            }
+            return cache;
         }
     }
 }

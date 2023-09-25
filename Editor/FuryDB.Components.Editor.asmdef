@@ -1,0 +1,20 @@
+{
+    "name": "FuryDB.Components.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:94f7169a9b3e416459f95ab592fd4ede",
+        "GUID:f616d2369cdff2245beb1e6de61fde50",
+        "GUID:48460ec9444ad6c4aa91608aca4afe8c"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

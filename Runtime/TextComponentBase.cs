@@ -7,7 +7,7 @@ namespace FDB.Components
         where TConfig : class
         where TTextResolver : struct, ITextResolver<TConfig>
     {
-        [SerializeField] TextValue<TDB, TConfig> _text;
+        [SerializeField] TextValueBase<TDB, TConfig, TTextResolver> _text;
         object[] _args;
 
         object[] _arg1;
@@ -117,21 +117,10 @@ namespace FDB.Components
         {
             _isDirty = false;
 
-            Index<TConfig> index;
-#if UNITY_EDITOR
-            index = Application.isPlaying
-                ? default(TTextResolver).Index
-                : (Index<TConfig>)FDB.Editor.EditorDB<TDB>.Resolver.GetIndex(typeof(TConfig));
-#else
-            index = Index;
-#endif
             string format;
             if (_text.Translate)
             {
-                index.TryGet(new Kind<TConfig>(_text.Value), out var config);
-                format = config != null
-                    ? default(TTextResolver).GetText(config)
-                    : _text.Value;
+                format = _text.Text;
             }
             else
             {

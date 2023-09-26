@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace FDB.Components.Editor
 {
-    [CustomPropertyDrawer(typeof(TextValue<,>))]
+    [CustomPropertyDrawer(typeof(TextValueBase<,,>), true)]
     internal class TextValueProperyRenderer : PropertyDrawer
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -96,9 +96,10 @@ namespace FDB.Components.Editor
             {
                 try
                 {
-                    var types = textValueType.GetGenericArguments();
-                    var dbType = types[0];
-                    var configType = types[1];
+                    var arguments = Utils.GetGenericTypeImplementationOf(textValueType, typeof(TextValueBase<,,>));
+                    var dbType = arguments[0];
+                    var configType = arguments[1];
+                    var textResolver = arguments[1];
                     var configKind = configType.GetField("Kind");
                     var editorDBType = typeof(EditorDB<>).MakeGenericType(dbType);
                     var get_Resolver = editorDBType.GetMethod("get_Resolver", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);

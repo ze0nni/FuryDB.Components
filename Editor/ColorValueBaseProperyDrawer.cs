@@ -115,7 +115,7 @@ namespace FDB.Components.Editor
             {
                 try
                 {
-                    var types = colorValueType.BaseType.GetGenericArguments();
+                    var types = Utils.GetGenericTypeImplementationOf(colorValueType, typeof(ColorValueBase<,,>));
                     var dbType = types[0];
                     var configType = types[1];
                     var configKind = configType.GetField("Kind");

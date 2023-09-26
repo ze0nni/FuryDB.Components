@@ -1,3 +1,5 @@
+[![openupm](https://img.shields.io/npm/v/com.pixelrebels.fdb.components?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.pixelrebels.fdb.components/)
+
 # FuryDB Components
 
 Components for integrate [FuryDB](https://github.com/ze0nni/FDB) in inity.

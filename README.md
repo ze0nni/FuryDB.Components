@@ -152,7 +152,7 @@ Run game and enjoy result:
 
 This method turn off toggle `Translate` and display textTex as is.
 
-```
+```Boot.cs
 _textComponent.SetText("{0}/{1}");
 _textComponent.SetArgs(3, 5)
 ```
@@ -165,13 +165,13 @@ begin use `TextConfig` to localize text.
 
 You can find texts kinds in `Kinds.cs` this class generate from database data. For example
 
-```
+```Boot.cs
 _textComponent.SetText(Kinds.Texts.weapon_name_sword);
 ```
 
 This is not recommended, but you can create composite Kind in runtime:
 
-```
+```Boot.cs
 var lang = Application.systemLanguage;
 _textComponent.SetText(new Kind<TextConfig>($"language_{lang}"));
 ```
@@ -180,7 +180,7 @@ Component will try search Config with same Kind./
 
 You can get `Kind` from other configs. For example `UnitConfig` has field `Name` with type `Ref<TextConfig>`
 
-```
+```DB.cs
 class DB {
     Index<UnitConfig> Units;
     Index<TextConfig> Texts;
@@ -202,7 +202,7 @@ void DisplayUnitName(UnitConfig unit) {
 
 If you have settings where player can chane language in runtime you need modify `TextComponent` for catch events of change language
 
-```
+```PlayerSettings.cs
 static class PlayerSettings {
     public static event Action OnLanguageChanged;
 
@@ -256,7 +256,7 @@ struct TextResolver : ITextResolver<TextConfig>
 
 `FyruDB Components` containst classes for work with color palette from configs. First declare confgis for in-game colors:
 
-```
+```DB.cs
 class DB {
     public Input<TextConfig> Texts;
     public Input<ColorConfig> Colors;
@@ -276,7 +276,7 @@ Next create class for store color data:
 > [!WARNING]
 > Dont forget `[Serializable]` attribute
 
-```
+```ColorValue.cs
 [Serializable]
 class ColorValue : ColorValueBase<DB, ColorConfig, ColorResolver>
 {

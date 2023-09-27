@@ -2,7 +2,7 @@
 
 # FuryDB Components
 
-Components for integrate [FuryDB](https://github.com/ze0nni/FDB) in inity.
+Components for integrate [FuryDB](https://github.com/ze0nni/FDB) with unity.
 
 - [Install](#install)
 - [How to use](#hot-to-use)

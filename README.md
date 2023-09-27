@@ -36,7 +36,7 @@ class DB {
 }
 
 class TestConfig {
-    Kind<TextConfig> Kind;
+    public Kind<TextConfig> Kind;
     public string En;
     public string Ru;
 }

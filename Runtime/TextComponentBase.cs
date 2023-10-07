@@ -1,17 +1,29 @@
 using FDB.Components.Text;
-using System;
+using Fury.Strings;
 using System.Collections;
 using UnityEngine;
 
 namespace FDB.Components
 {
-    public abstract class TextComponentBase<TDB, TConfig, TTextResolver> : MonoBehaviour 
+    public abstract class TextComponentBase<TDB, TConfig, TTextResolver> : MonoBehaviour
         where TConfig : class
         where TTextResolver : struct, ITextResolver<TConfig>
     {
         [SerializeField] TextValueBase<TDB, TConfig, TTextResolver> _text;
-        string[] _args;
-        string[][] _argsList = new string[8][];
+        Args _args;
+
+        public Args Args
+        {
+            get
+            {
+                if (_args == null)
+                {
+                    _args = new Args(SetDirty);
+                }
+                _args.Clear();
+                return _args;
+            }
+        }
 
         VariableProcessorDelegate _variableProcessor;
         public void SetVariableProcessor(VariableProcessorDelegate value)
@@ -33,140 +45,6 @@ namespace FDB.Components
         {
             _text.Translate = true;
             _text.Value = kind.Value;
-            SetDirty();
-        }
-
-        private string[] Args(int size)
-        {
-            if (size == 0)
-            {
-                _args = null;
-                return null;
-            }
-            if (size > _argsList.Length)
-            {
-                var newList = new string[size * 2][];
-                Array.Copy(_argsList, newList, _argsList.Length);
-                _argsList = newList;
-            }
-            if (_argsList[size - 1] == null)
-            {
-                _argsList[size - 1] = new string[size];
-            }
-            _args = _argsList[size - 1];
-            return _args;
-        }
-
-        public void SetArgs()
-        {
-            Args(0);
-            SetDirty();
-        }
-
-        public void SetArgs<A>(A a)
-        {
-            var args = Args(1);
-            var n = 0;
-            args[n++] = a.ToString();
-
-            SetDirty();
-        }
-
-        public void SetArgs<A, B>(A a, B b)
-        {
-            var args = Args(2);
-            var n = 0;
-            args[n++] = a.ToString();
-            args[n++] = b.ToString();
-
-            SetDirty();
-        }
-
-        public void SetArgs<A, B, C>(A a, B b, C c)
-        {
-            var args = Args(3);
-            var n = 0;
-            args[n++] = a.ToString();
-            args[n++] = b.ToString();
-            args[n++] = c.ToString();
-
-            SetDirty();
-        }
-
-        public void SetArgs<A, B, C, D>(A a, B b, C c, D d)
-        {
-            var args = Args(4);
-            var n = 0;
-            args[n++] = a.ToString();
-            args[n++] = b.ToString();
-            args[n++] = c.ToString();
-            args[n++] = d.ToString();
-
-            SetDirty();
-        }
-
-        public void SetArgs<A, B, C, D, E>(A a, B b, C c, D d, E e)
-        {
-            var args = Args(5);
-            var n = 0;
-            args[n++] = a.ToString();
-            args[n++] = b.ToString();
-            args[n++] = c.ToString();
-            args[n++] = d.ToString();
-            args[n++] = e.ToString();
-
-            SetDirty();
-        }
-
-        public void SetArgs<A, B, C, D, E, F>(A a, B b, C c, D d, E e, F f)
-        {
-            var args = Args(6);
-            var n = 0;
-            args[n++] = a.ToString();
-            args[n++] = b.ToString();
-            args[n++] = c.ToString();
-            args[n++] = d.ToString();
-            args[n++] = e.ToString();
-            args[n++] = f.ToString();
-
-            SetDirty();
-        }
-
-        public void SetArgs<A, B, C, D, E, F, H>(A a, B b, C c, D d, E e, F f, H h)
-        {
-            var args = Args(7);
-            var n = 0;
-            args[n++] = a.ToString();
-            args[n++] = b.ToString();
-            args[n++] = c.ToString();
-            args[n++] = d.ToString();
-            args[n++] = e.ToString();
-            args[n++] = f.ToString();
-            args[n++] = h.ToString();
-
-            SetDirty();
-        }
-
-        public void SetArgs<A, B, C, D, E, F, H, I>(A a, B b, C c, D d, E e, F f, H h, I i)
-        {
-            var args = Args(8);
-            var n = 0;
-            args[n++] = a.ToString();
-            args[n++] = b.ToString();
-            args[n++] = c.ToString();
-            args[n++] = d.ToString();
-            args[n++] = e.ToString();
-            args[n++] = f.ToString();
-            args[n++] = h.ToString();
-            args[n++] = i.ToString();
-
-            SetDirty();
-        }
-
-        public void SetArgs(params string[] args)
-        {
-            _args = args;
-
             SetDirty();
         }
 
@@ -227,7 +105,7 @@ namespace FDB.Components
                 format = _text.Value;
             }
 
-            string text;
+            string text = "!";
             var processor = GetProcessor();
             if (processor == null)
             {

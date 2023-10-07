@@ -22,14 +22,14 @@ namespace FDB.Components.Text
 
         public string Execute(
             string format,
-            string[] args = null, 
+            Args args = null, 
             VariableProcessorDelegate variableProcessor = null)
         {
             _currentVariableProcessor = variableProcessor;
 
             _format.Setup(
                 format,
-                args,
+                args: args == null || args.Length == 0 ? null : args,
                 variablesProcessor: variableProcessor != null || _defaultVariableProcessor != null 
                     ? _internalVariableProcessor 
                     : null,

@@ -1,3 +1,4 @@
+using FDB.Components.Text;
 using System.Collections;
 using UnityEngine;
 
@@ -8,11 +9,11 @@ namespace FDB.Components
         where TTextResolver : struct, ITextResolver<TConfig>
     {
         [SerializeField] TextValueBase<TDB, TConfig, TTextResolver> _text;
-        object[] _args;
+        string[] _args;
 
-        object[] _arg1;
-        object[] _arg2;
-        object[] _arg3;
+        string[] _arg1;
+        string[] _arg2;
+        string[] _arg3;
 
         public bool Translate => _text.Translate;
 
@@ -38,8 +39,8 @@ namespace FDB.Components
 
         public void SetArgs<A>(A a)
         {
-            _arg1 = _arg1 ?? new object[1];
-            _arg1[0] = a;
+            _arg1 = _arg1 ?? new string[1];
+            _arg1[0] = a.ToString();
 
             _args = _arg1;
             SetDirty();
@@ -47,9 +48,9 @@ namespace FDB.Components
 
         public void SetArgs<A, B>(A a, B b)
         {
-            _arg2 = _arg2 ?? new object[2];
-            _arg2[0] = a;
-            _arg2[1] = b;
+            _arg2 = _arg2 ?? new string[2];
+            _arg2[0] = a.ToString();
+            _arg2[1] = b.ToString();
 
             _args = _arg2;
             SetDirty();
@@ -57,33 +58,35 @@ namespace FDB.Components
 
         public void SetArgs<A, B, C>(A a, B b, C c)
         {
-            _arg3 = _arg3 ?? new object[3];
-            _arg3[0] = a;
-            _arg3[1] = b;
-            _arg3[2] = c;
+            _arg3 = _arg3 ?? new string[3];
+            _arg3[0] = a.ToString();
+            _arg3[1] = b.ToString();
+            _arg3[2] = c.ToString();
 
             _args = _arg3;
             SetDirty();
         }
 
-        public void SetArgs(params object[] args)
+        public void SetArgs(params string[] args)
         {
             _args = args;
             SetDirty();
         }
 
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
             StartRender();
         }
 
 #if UNITY_EDITOR
-        public virtual void OnValidate()
+        protected virtual void OnValidate()
         {
             _isDirty = false;
             SetDirty();
         }
 #endif
+        protected virtual ITextProcessor GetProcessor() => null;
+
         protected abstract void Render(string text);
 
         private bool _isDirty = false;
@@ -127,9 +130,17 @@ namespace FDB.Components
                 format = _text.Value;
             }
 
-            var text = _args != null && _args.Length > 0
-                ? string.Format(format, _args)
-                : format;
+            string text;
+            var processor = GetProcessor();
+            if (processor == null)
+            {
+                text = _args != null && _args.Length > 0
+                    ? string.Format(format, _args)
+                    : format;
+            } else
+            {
+                text = processor.Execute(format, _args);
+            }
 
             Render(text);
         }

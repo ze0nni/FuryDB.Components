@@ -2,6 +2,7 @@
     "name": "FuryDB.Components",
     "rootNamespace": "",
     "references": [
+        "Fury.Strings",
         "FuryDB",
         "FuryDB.Editor"
     ],

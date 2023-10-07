@@ -1,25 +1,25 @@
 {
   "name": "com.pixelrebels.fdb.components",
-  "author": "ze0nni",
+  "author": {
+    "name": "Onni",
+    "email": "ze0nni@gmail.com",
+    "url": "https://pixel-rebels.com/"
+  },
   "displayName": "FuryDB Components",
   "description": "Unity Components for integration with FuryDB",
   "category": "Components",
   "version": "0.0.1",
-    "keywords": [
-        "text",
-        "localization"
-    ],
+  "keywords": [
+    "text",
+    "localization"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/ze0nni/FuryDB.Components.git"
   },
   "type": "tool",
   "dependencies": {
-    "com.pixelrebels.fdb": "0.5.0"
-  },
-  "author": {
-    "name": "Onni",
-    "email": "ze0nni@gmail.com",
-    "url": "https://pixel-rebels.com/"
+    "com.pixelrebels.fdb": "0.5.0",
+    "com.pixelrebels.fury.strings": "0.0.1"
   }
 }

@@ -18,7 +18,11 @@ Or this link
 
 > `https://github.com/ze0nni/FDB.git`
 
-In second. Install `FuryDB Components` package by this link:
+Second dependency is `Fury.Strings` install it by follow link:
+
+> `https://github.com/ze0nni/FuryStrings.git`
+
+Thirdly. Install `FuryDB Components` package by this link:
 
 > `https://github.com/ze0nni/FuryDB.Components.git`
 

@@ -13,6 +13,13 @@ namespace FDB.Components
         string[] _args;
         string[][] _argsList = new string[8][];
 
+        VariableProcessorDelegate _variableProcessor;
+        public void SetVariableProcessor(VariableProcessorDelegate value)
+        {
+            _variableProcessor = value;
+            SetDirty();
+        }
+
         public bool Translate => _text.Translate;
 
         public void SetText(string text, bool translate = false)
@@ -229,7 +236,7 @@ namespace FDB.Components
                     : format;
             } else
             {
-                text = processor.Execute(format, _args);
+                text = processor.Execute(format, _args, _variableProcessor);
             }
 
             Render(text);

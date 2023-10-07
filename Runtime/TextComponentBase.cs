@@ -105,12 +105,12 @@ namespace FDB.Components
                 format = _text.Value;
             }
 
-            string text = "!";
+            string text;
             var processor = GetProcessor();
             if (processor == null)
             {
                 text = _args != null && _args.Length > 0
-                    ? string.Format(format, _args)
+                    ? string.Format(format, _args.ToObjectsArray())
                     : format;
             } else
             {

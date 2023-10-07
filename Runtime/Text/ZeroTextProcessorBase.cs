@@ -36,21 +36,20 @@ namespace FDB.Components.Text
                 colorsMap: _colorsMap,
                 tagsAlias: _tagsAlias,
                 tagsProcessor: _tagsProcessor);
+            var result = _format.ToString();
+
             _currentVariableProcessor = null;
 
-            return _format.ToString();
+            return result;
         }
 
-        private void VariableProcessor(StringRef variable, ref FormatBuffer buffer)
+        private void VariableProcessor(StringRef variable, FormatBuffer buffer)
         {
-            if (_currentVariableProcessor != null && _currentVariableProcessor(variable, ref buffer))
+            if (_currentVariableProcessor != null && _currentVariableProcessor(variable, buffer))
             {
                 return;
             }
-            if (_defaultVariableProcessor != null)
-            {
-                _defaultVariableProcessor(variable, ref buffer);
-            }
+            _defaultVariableProcessor?.Invoke(variable, buffer);
         }
 
         public void Reload()

@@ -2,7 +2,7 @@ using Fury.Strings;
 
 namespace FDB.Components.Text
 {
-    public delegate bool VariableProcessorDelegate(in StringRef variable, ref FormatBuffer buffer);
+    public delegate bool VariableProcessorDelegate(StringRef variable, ref FormatBuffer buffer);
 
     public interface ITextProcessor
     {

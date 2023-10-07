@@ -41,15 +41,15 @@ namespace FDB.Components.Text
             return _format.ToString();
         }
 
-        private void VariableProcessor(in StringRef variable, ref FormatBuffer buffer)
+        private void VariableProcessor(StringRef variable, ref FormatBuffer buffer)
         {
-            if (_currentVariableProcessor != null && _currentVariableProcessor(in variable, ref buffer))
+            if (_currentVariableProcessor != null && _currentVariableProcessor(variable, ref buffer))
             {
                 return;
             }
             if (_defaultVariableProcessor != null)
             {
-                _defaultVariableProcessor(in variable, ref buffer);
+                _defaultVariableProcessor(variable, ref buffer);
             }
         }
 

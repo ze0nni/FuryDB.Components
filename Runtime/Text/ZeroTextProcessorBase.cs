@@ -3,18 +3,18 @@ using UnityEngine;
 
 namespace FDB.Components.Text
 {
-    public abstract class TextProcessorBase<TDB> : ITextProcessor
+    public abstract class ZeroTextProcessorBase<TDB> : ITextProcessor
     {
-        readonly Format _format = new Format(1024);
-        readonly Format.VariableProcessorDelegate _internalVariableProcessor;
-        Format.VariableProcessorDelegate _defaultVariableProcessor;
+        readonly ZeroFormat _format = new ZeroFormat(1024);
+        readonly ZeroFormat.VariableProcessorDelegate _internalVariableProcessor;
+        ZeroFormat.VariableProcessorDelegate _defaultVariableProcessor;
         VariableProcessorDelegate _currentVariableProcessor;
 
         readonly StringDictionary<string> _colorsMap = new StringDictionary<string>();
         readonly StringDictionary<(string, string)> _tagsAlias = new StringDictionary<(string, string)>();
-        readonly StringDictionary<Format.TagProcessorDelegate> _tagsProcessor = new StringDictionary<Format.TagProcessorDelegate>();
+        readonly StringDictionary<ZeroFormat.TagProcessorDelegate> _tagsProcessor = new StringDictionary<ZeroFormat.TagProcessorDelegate>();
 
-        public TextProcessorBase()
+        public ZeroTextProcessorBase()
         {
             _internalVariableProcessor = VariableProcessor;
             Reload();
@@ -113,13 +113,13 @@ namespace FDB.Components.Text
 
         protected readonly ref struct TagsProcessorMap
         {
-            readonly StringDictionary<Format.TagProcessorDelegate> _processors;
-            internal TagsProcessorMap(StringDictionary<Format.TagProcessorDelegate> processors)
+            readonly StringDictionary<ZeroFormat.TagProcessorDelegate> _processors;
+            internal TagsProcessorMap(StringDictionary<ZeroFormat.TagProcessorDelegate> processors)
             {
                 _processors = processors;
             }
 
-            public void Register(string tag, Format.TagProcessorDelegate processor)
+            public void Register(string tag, ZeroFormat.TagProcessorDelegate processor)
             {
                 _processors.Add(tag, processor);
             }
@@ -129,6 +129,6 @@ namespace FDB.Components.Text
         protected abstract void LoadColors(TDB db, ref ColorsMap map);
         protected abstract void LoadTagsAlias(TDB db, ref TagsAliasMap map);
         protected abstract void LoadTagsProcessor(TDB db, ref TagsProcessorMap map);
-        protected abstract Format.VariableProcessorDelegate LoadVariableProcessor(TDB db);
+        protected abstract ZeroFormat.VariableProcessorDelegate LoadVariableProcessor(TDB db);
     }
 }

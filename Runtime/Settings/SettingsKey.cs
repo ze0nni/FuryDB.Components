@@ -44,7 +44,7 @@ namespace FDB.Components.Settings
 
         internal SettingsKey(SettingsGroup group, FieldInfo keyField)
         {
-            Name = keyField.FieldType.Name;
+            Name = keyField.Name;
             Id = $"{group.Name}.{Name}";
             Group = group;
             KeyType = keyField.FieldType;

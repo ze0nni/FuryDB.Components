@@ -86,7 +86,10 @@ namespace FDB.Components.Settings
             OnFieldLayout();
         }
 
-        protected internal abstract void OnFieldLayout();
+        protected internal virtual void OnFieldLayout()
+        {
+
+        }
     }
 
     public abstract class SettingsKey<TValue, TKeyData> : SettingsKey<TKeyData>

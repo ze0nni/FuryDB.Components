@@ -20,7 +20,7 @@ namespace FDB.Components.Settings
         {
             if (_lockRegisterFactories)
             {
-                throw new Exception($"You must call {nameof(SettingsController)}.{nameof(RegisterKeyFactory)}() before first time call {nameof(SettingsController)}.{nameof(Get)}");
+                throw new Exception($"You must call {nameof(SettingsController)}.{nameof(RegisterKeyFactory)}() before first time call {nameof(SettingsController)}.{nameof(New)}");
             }
             _userKeyFactories.Add(factory);
         }
@@ -60,7 +60,7 @@ namespace FDB.Components.Settings
                 KeyFactories.ToArray());
         }
 
-        public static SettingsController Get(string userId, Type settingsType)
+        public static SettingsController New(string userId, Type settingsType)
         {
             _lockRegisterFactories = true;
 

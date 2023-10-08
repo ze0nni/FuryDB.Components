@@ -170,7 +170,7 @@ namespace FDB.Components.Settings
             salt = attr.Salt;
             if (string.IsNullOrEmpty(salt))
             {
-                Debug.LogWarning($"No salt for {settingsType.Name} hash function");
+                Debug.LogWarning($"No salt for {settingsType.Name} hash function of {settingsType.FullName}");
             }
             if (attr.HashType != 0)
             {

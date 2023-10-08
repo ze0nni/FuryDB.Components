@@ -47,6 +47,12 @@ namespace FDB.Components.Settings
                 {
                     throw new ArgumentException("Excepted float or int");
                 }
+                var range = keyField.GetCustomAttribute<RangeAttribute>();
+                if (range != null)
+                {
+                    Min = range.min;
+                    Max = range.max;
+                }
             }
 
             protected override bool ValidateValue(ref float value)
@@ -102,7 +108,25 @@ namespace FDB.Components.Settings
 
             protected internal override void OnFieldLayout()
             {
-                
+                var newValue = GUILayout.TextField(StringValue);
+                if (float.TryParse(newValue, out var n))
+                {
+                    if (n != Value)
+                    {
+                        Value = n;
+                    }
+                } else
+                {
+                    Value = 0;
+                }
+                if (GUILayout.Button("-", GUILayout.Width(42)))
+                {
+                    Value -= 1;
+                }
+                if (GUILayout.Button("+", GUILayout.Width(42)))
+                {
+                    Value += 1;
+                }
             }
         }
     }

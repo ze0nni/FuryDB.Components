@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FDB.Components.Settings
 {
-    public static partial class SettingsStorage
+    internal static partial class SettingsStorage
     {
         internal sealed class Prefs : ISettingsStorage
         {

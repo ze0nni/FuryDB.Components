@@ -6,21 +6,20 @@ namespace FDB.Components.Settings
     public sealed class SettingsPageGUI<TKeysData>
         where TKeysData : ISettingsKeyData
     {
-        public readonly SettingsPage<TKeysData> Page;
-
+        private readonly SettingsPage<TKeysData> _page;
         private readonly GUIContent[] _groupNames;
 
-        public SettingsPageGUI(SettingsPage<TKeysData> page)
+        public SettingsPageGUI(SettingsController controler)
         {
-            Page = page;
-            _groupNames = Page.Groups.Select(x => new GUIContent(x.Name)).ToArray();
+            _page = controler.CreatePage<TKeysData>();
+            _groupNames = _page.Groups.Select(x => new GUIContent(x.Name)).ToArray();
         }
 
         int _selectedGroup;
         Vector2 _scrollPosition;
         SettingsGroup<TKeysData> SelectedGroup => _selectedGroup < 0 || _selectedGroup >= _groupNames.Length
             ? null
-            : Page.Groups[_selectedGroup];
+            : _page.Groups[_selectedGroup];
 
         public void OnGUILayout()
         {
@@ -69,21 +68,21 @@ namespace FDB.Components.Settings
         {
             using (new GUILayout.HorizontalScope())
             {
-                GUI.enabled = Page.IsChanged;
+                GUI.enabled = _page.IsChanged;
                 {
                     if (GUILayout.Button("Apply"))
                     {
-                        Page.Apply(true);
+                        _page.Apply(true);
                     }
                     if (GUILayout.Button("Reset"))
                     {
-                        Page.Reset();
+                        _page.Reset();
                     }
                 }
                 GUI.enabled = true;
                 if (GUILayout.Button("Default"))
                 {
-                    Page.LoadDefault();
+                    _page.LoadDefault();
                 }
                 if (GUILayout.Button("Close"))
                 {

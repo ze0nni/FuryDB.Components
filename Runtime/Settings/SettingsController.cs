@@ -16,37 +16,46 @@ namespace FDB.Components.Settings
 
         public Type SettingsType { get; private set; }
         public string UserId { get; private set; } = "";
+        public string HashedUserId { get; private set; } = "";
         private ISettingsKeyFactory[] _factories;
         private Action _onChangedCallback;
         private ISettingsStorage _storage;
+        private IUserIdHash _hash;
+        private string _hashSalt;
         private SettingsPage<VoidSettingsKeyData> _innserPage;
 
         internal void OnApplyChanges() => _onChangedCallback?.Invoke();
 
+        public event Action OnUserChanged;
+
         public SettingsController(
+            string userId,
             Type settingsType,
             params ISettingsKeyFactory[] userFactories)
         {
-            Init(settingsType, new SettingsStorage.Prefs(), userFactories);
+            Init(userId, settingsType, SettingsStorageAttribute.ResolveStorage(settingsType), userFactories);
         }
 
         public SettingsController(
+            string userId,
             Type settingsType,
             StorageType storageType,
             params ISettingsKeyFactory[] userFactories)
         {
-            Init(settingsType, storageType.Resolve(settingsType), userFactories);
+            Init(userId, settingsType, storageType.Resolve(settingsType), userFactories);
         }
 
         public SettingsController(
+            string userId,
             Type settingsType,
             ISettingsStorage storage,
             params ISettingsKeyFactory[] userFactories)
         {
-            Init(settingsType, storage, userFactories);
+            Init(userId, settingsType, storage, userFactories);
         }
 
         private void Init(
+            string userId,
             Type settingsType,
             ISettingsStorage storage,
             params ISettingsKeyFactory[] userFactories)
@@ -62,17 +71,22 @@ namespace FDB.Components.Settings
             SettingsType = settingsType;
             _factories = userFactories.Concat(DefaultFactories).ToArray();
             _onChangedCallback = OnApplySettingsAttribute.ResolveCallback(settingsType);
-            if (storage == null)
-            {
-                throw new ArgumentNullException(nameof(storage));
-            }
-            _storage = storage;
+            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+            _hash = SettingsUserIdHashAttribute.Resolve(settingsType, out _hashSalt);
             _innserPage = CreatePage<VoidSettingsKeyData>();
+            if (userId != null)
+            {
+                SetUsetId(userId);
+            }
         }
 
         public SettingsPage<TKeyData> CreatePage<TKeyData>()
             where TKeyData : ISettingsKeyData
         {
+            if (UserId == null)
+            {
+                throw new ArgumentNullException($"Call {nameof(SettingsController)}.{nameof(SetUsetId)}() before use settings");
+            }
             var page = new SettingsPage<TKeyData>(this);
             page.Setup();
             return page;
@@ -110,16 +124,18 @@ namespace FDB.Components.Settings
 
         public void SetUsetId(string userId)
         {
-            UserId = userId;
+            UserId = userId ?? throw new ArgumentNullException(nameof(userId));
+            HashedUserId = _hash == null ? userId : _hash.Hash(_hashSalt + userId);
             _innserPage.LoadDefault();
             _innserPage.Apply(false);
             Load();
+            OnUserChanged?.Invoke();
         }
 
         public void Load()
         {
             _innserPage.Reset();
-            using (_storage.Read(UserId, out var reader))
+            using (_storage.Read(HashedUserId, out var reader))
             {
                 _innserPage.Load(reader);
             }
@@ -140,7 +156,7 @@ namespace FDB.Components.Settings
 
         internal void Save(SettingsPage page)
         {
-            using (_storage.Write(UserId, out var writer))
+            using (_storage.Write(HashedUserId, out var writer))
             {
                 page.Save(writer);
             }

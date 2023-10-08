@@ -4,8 +4,9 @@ namespace FDB.Components.Settings
 {
     public enum StorageType
     {
-        Null,
+        Null = 1,
         Prefs,
+        PersistentDataPath
     }
 
     public interface ISettingsStorage
@@ -24,7 +25,7 @@ namespace FDB.Components.Settings
         bool Read(SettingsKey key, out string value);
     }
 
-    public static partial class SettingsStorage
+    internal static partial class SettingsStorage
     {
         public static ISettingsStorage Resolve(this StorageType type, Type settingsType)
         {
@@ -34,6 +35,8 @@ namespace FDB.Components.Settings
                     return new Null();
                 case StorageType.Prefs:
                     return new Prefs();
+                case StorageType.PersistentDataPath:
+                    return new PersistentDataPath(settingsType);
                 default:
                     throw new ArgumentOutOfRangeException(type.ToString());
             }

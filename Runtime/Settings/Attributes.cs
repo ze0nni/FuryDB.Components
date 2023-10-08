@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Security.Cryptography;
 using UnityEngine;
 
 namespace FDB.Components.Settings
@@ -8,7 +9,7 @@ namespace FDB.Components.Settings
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class OnApplySettingsAttribute : Attribute
     {
-        public static Action ResolveCallback(Type type)
+        internal static Action ResolveCallback(Type type)
         {
             List<Action> actions = new List<Action>();
 
@@ -50,6 +51,158 @@ namespace FDB.Components.Settings
                     }
                 }
             };
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public sealed class SettingsStorageAttribute : Attribute
+    {
+        public const string DefaultFileName = "settings_{0}.json";
+
+        public readonly StorageType StorageType = 0;
+        public readonly string FileName;
+        public readonly Type CustomStorageType;
+
+        public SettingsStorageAttribute(StorageType storageType, string filename = DefaultFileName)
+        {
+            StorageType = storageType;
+            FileName = filename;
+        }
+
+        public SettingsStorageAttribute(Type customStorageType)
+        {
+            CustomStorageType = customStorageType;
+        }
+
+        internal static ISettingsStorage ResolveStorage(Type settingsType)
+        {
+            var attr = settingsType.GetCustomAttribute<SettingsStorageAttribute>();
+            if (attr == null)
+            {
+                return new SettingsStorage.Prefs();
+            }
+            if (attr.StorageType != 0)
+            {
+                return attr.StorageType.Resolve(settingsType);
+            }
+            if (attr.CustomStorageType != null)
+            {
+                var storageType = attr.CustomStorageType;
+                if (!typeof(ISettingsStorage).IsAssignableFrom(storageType))
+                {
+                    Debug.LogWarning($"Type {storageType} not implements {typeof(ISettingsStorage).FullName}");
+                }
+                else
+                {
+                    var typeConstructor = storageType.GetConstructor(new Type[] { typeof(Type) });
+                    if (typeConstructor != null)
+                    {
+                        return (ISettingsStorage)typeConstructor.Invoke(new object[] { storageType });
+                    }
+                    var emptyConstructor = storageType.GetConstructor(new Type[] { });
+                    if (emptyConstructor != null)
+                    {
+                        return (ISettingsStorage)emptyConstructor.Invoke(new object[] { });
+                    }
+                }
+                Debug.LogWarning($"No suitable constr in {storageType.Name} expected {storageType.Name}() or {storageType.Name}(Type settingsType)");
+            }
+            Debug.LogWarning($"Attribute [SettingsStorage] exists for {settingsType.FullName} but default settings {typeof(SettingsStorage.Prefs).Name} created");
+            return new SettingsStorage.Prefs();
+        }
+
+        internal static string ResolveFileName(Type settingsType)
+        {
+            var attr = settingsType.GetCustomAttribute<SettingsStorageAttribute>();
+            if (attr == null || string.IsNullOrWhiteSpace(attr.FileName))
+            {
+                return DefaultFileName;
+            }
+            var name = attr.FileName.Trim();
+            if (name != attr.FileName)
+            {
+                Debug.LogWarning($"FileName trimmed \"{attr.FileName}\"");
+            }
+            try
+            {
+                if (string.Format(name, 0) == string.Format(name, 1))
+                {
+                    Debug.LogWarning($"Filename \"{name}\" must contains \"{{0}}\" substring for different users");
+                    return DefaultFileName;
+                }
+            } catch (Exception exc)
+            {
+                Debug.LogWarning($"Error when format filename \"{name}\"");
+                Debug.LogException(exc);
+                return DefaultFileName;
+            }
+            return name;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public sealed class SettingsUserIdHashAttribute : Attribute
+    {
+        public readonly HashType HashType = 0;
+        public readonly Type CustomHashType;
+        public readonly string Salt;
+
+        public SettingsUserIdHashAttribute(HashType type, string salt)
+        {
+            HashType = type;
+            Salt = salt;
+        }
+
+        public SettingsUserIdHashAttribute(Type customType, string salt)
+        {
+            CustomHashType = customType;
+            Salt = salt;
+        }
+
+        internal static IUserIdHash Resolve(Type settingsType, out string salt)
+        {
+            var attr = settingsType.GetCustomAttribute<SettingsUserIdHashAttribute>();
+            if (attr == null)
+            {
+                salt = null;
+                return null;
+            }
+            salt = attr.Salt;
+            if (string.IsNullOrEmpty(salt))
+            {
+                Debug.LogWarning($"No salt for {settingsType.Name} hash function");
+            }
+            if (attr.HashType != 0)
+            {
+                return attr.HashType.Resolve();
+            }
+            if (attr.CustomHashType != null)
+            {
+                var hashType = attr.CustomHashType;
+                if (typeof(IUserIdHash).IsAssignableFrom(hashType))
+                {
+                    var emptyConstructor = hashType.GetConstructor(new Type[] { });
+                    if (emptyConstructor != null)
+                    {
+                        return (IUserIdHash)emptyConstructor.Invoke(new object[] { });
+                    }
+                    Debug.LogWarning($"No default constructor for type {hashType.FullName}");
+                } else if (typeof(HashAlgorithm).IsAssignableFrom(hashType))
+                {
+                    var emptyConstructor = hashType.GetConstructor(new Type[] { });
+                    if (emptyConstructor != null)
+                    {
+                        var algorithm = (HashAlgorithm)emptyConstructor.Invoke(new object[] { });
+                        return new SettingsStorage.UserIdHash(algorithm);
+                    }
+                    Debug.LogWarning($"No default constructor for type {hashType.FullName}");
+                } else
+                {
+                    Debug.LogWarning($"Type {hashType.FullName} not implements {typeof(IUserIdHash).FullName} or {typeof(HashAlgorithm).FullName}");
+                }
+            }
+            Debug.LogWarning($"Attribute [SettingsUserIdHash] exists for {settingsType.FullName} but hash not found");
+            return null;
         }
     }
 }

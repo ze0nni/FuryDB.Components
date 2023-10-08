@@ -52,5 +52,4 @@ namespace FDB.Components.Settings
             };
         }
     }
-
 }

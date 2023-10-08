@@ -18,6 +18,9 @@ namespace FDB.Components.Settings
         public readonly Type KeyType;
         public readonly FieldInfo KeyField;
 
+        public string StringValue { get; private set; }
+        internal void UpdateStringValue(string value) => StringValue = value;
+
         public bool IsChanged { get; private set; }
 
         internal SettingsKey(SettingsGroup group, FieldInfo keyField)
@@ -105,6 +108,7 @@ namespace FDB.Components.Settings
                     throw new ArgumentException($"Invalid value \"{value}\" for key {Path}");
                 }
                 _value = value;
+                UpdateStringValue(ValueToString(value));
                 OnKeyChanged();
             }
         }
@@ -129,10 +133,13 @@ namespace FDB.Components.Settings
             var value = ReadValue(KeyField.GetValue(null));
             ValidateValue(ref value);
             _value = ReadValue(value);
+            UpdateStringValue(ValueToString(_value));
         }
 
         protected abstract bool ValidateValue(ref TValue value);
         protected abstract TValue ReadValue(object value);
         protected abstract object WriteValue(TValue value);
+        protected abstract string ValueToString(TValue value);
+        protected abstract TValue ValueFromString(string value);
     }
 }

@@ -91,6 +91,16 @@ namespace FDB.Components.Settings
                 return e;
             }
 
+            protected override string ValueFromString(string value)
+            {
+                return value;
+            }
+
+            protected override string ValueToString(string value)
+            {
+                return value;
+            }
+
             protected internal override void OnFieldLayout()
             {
                 ValueIndex = GUILayout.Toolbar(ValueIndex, _optionsGUINames);

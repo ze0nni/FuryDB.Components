@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using UnityEngine;
 
 namespace FDB.Components.Settings
 {
@@ -86,6 +87,17 @@ namespace FDB.Components.Settings
                     default:
                         throw new ArgumentNullException(Type.ToString());
                 }
+            }
+
+            protected override float ValueFromString(string value)
+            {
+                float.TryParse(value, out var n);
+                return n;
+            }
+
+            protected override string ValueToString(float value)
+            {
+                return value.ToString();
             }
 
             protected internal override void OnFieldLayout()

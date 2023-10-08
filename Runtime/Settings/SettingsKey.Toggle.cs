@@ -43,6 +43,17 @@ namespace FDB.Components.Settings
                 return value;
             }
 
+            protected override bool ValueFromString(string value)
+            {
+                bool.TryParse(value, out var b);
+                return b;
+            }
+
+            protected override string ValueToString(bool value)
+            {
+                return value.ToString();
+            }
+
             protected internal override void OnFieldLayout()
             {
                 Value = GUILayout.Toggle(Value, "");

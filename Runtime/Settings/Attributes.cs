@@ -141,27 +141,27 @@ namespace FDB.Components.Settings
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public sealed class SettingsUserIdHashAttribute : Attribute
+    public sealed class SettingHashAttribute : Attribute
     {
         public readonly HashType HashType = 0;
         public readonly Type CustomHashType;
         public readonly string Salt;
 
-        public SettingsUserIdHashAttribute(HashType type, string salt)
+        public SettingHashAttribute(HashType type, string salt)
         {
             HashType = type;
             Salt = salt;
         }
 
-        public SettingsUserIdHashAttribute(Type customType, string salt)
+        public SettingHashAttribute(Type customType, string salt)
         {
             CustomHashType = customType;
             Salt = salt;
         }
 
-        internal static IUserIdHash Resolve(Type settingsType, out string salt)
+        internal static ISettingsHash Resolve(Type settingsType, out string salt)
         {
-            var attr = settingsType.GetCustomAttribute<SettingsUserIdHashAttribute>();
+            var attr = settingsType.GetCustomAttribute<SettingHashAttribute>();
             if (attr == null)
             {
                 salt = null;
@@ -179,12 +179,12 @@ namespace FDB.Components.Settings
             if (attr.CustomHashType != null)
             {
                 var hashType = attr.CustomHashType;
-                if (typeof(IUserIdHash).IsAssignableFrom(hashType))
+                if (typeof(ISettingsHash).IsAssignableFrom(hashType))
                 {
                     var emptyConstructor = hashType.GetConstructor(new Type[] { });
                     if (emptyConstructor != null)
                     {
-                        return (IUserIdHash)emptyConstructor.Invoke(new object[] { });
+                        return (ISettingsHash)emptyConstructor.Invoke(new object[] { });
                     }
                     Debug.LogWarning($"No default constructor for type {hashType.FullName}");
                 } else if (typeof(HashAlgorithm).IsAssignableFrom(hashType))
@@ -193,12 +193,12 @@ namespace FDB.Components.Settings
                     if (emptyConstructor != null)
                     {
                         var algorithm = (HashAlgorithm)emptyConstructor.Invoke(new object[] { });
-                        return new SettingsStorage.UserIdHash(algorithm);
+                        return new SettingsStorage.SettingsHash(algorithm);
                     }
                     Debug.LogWarning($"No default constructor for type {hashType.FullName}");
                 } else
                 {
-                    Debug.LogWarning($"Type {hashType.FullName} not implements {typeof(IUserIdHash).FullName} or {typeof(HashAlgorithm).FullName}");
+                    Debug.LogWarning($"Type {hashType.FullName} not implements {typeof(ISettingsHash).FullName} or {typeof(HashAlgorithm).FullName}");
                 }
             }
             Debug.LogWarning($"Attribute [SettingsUserIdHash] exists for {settingsType.FullName} but hash not found");

@@ -9,29 +9,29 @@ namespace FDB.Components.Settings
         MD5 = 1
     }
 
-    public interface IUserIdHash
+    public interface ISettingsHash
     {
         string Hash(string userId);
     }
 
     internal static partial class SettingsStorage
     {
-        internal static IUserIdHash Resolve(this HashType type)
+        internal static ISettingsHash Resolve(this HashType type)
         {
             switch (type)
             {
                 case HashType.MD5:
-                    return new UserIdHash(new MD5CryptoServiceProvider());
+                    return new SettingsHash(new MD5CryptoServiceProvider());
                 default:
                     throw new ArgumentOutOfRangeException(type.ToString());
             }
         }
 
-        internal class UserIdHash : IUserIdHash
+        internal class SettingsHash : ISettingsHash
         {
             readonly HashAlgorithm _algorithm;
 
-            public UserIdHash(HashAlgorithm algorithm) => _algorithm = algorithm;
+            public SettingsHash(HashAlgorithm algorithm) => _algorithm = algorithm;
 
             public string Hash(string userId)
             {

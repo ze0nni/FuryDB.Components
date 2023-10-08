@@ -1,28 +1,21 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace FDB.Components.Settings
 {
-    public sealed class SettingsController
+    public sealed partial class SettingsController
     {
-        public static IReadOnlyList<ISettingsKeyFactory> DefaultFactories = new ISettingsKeyFactory[]
-        {
-            new SettingsKey.EnumKeyFactory(),
-            new SettingsKey.NumberKeyFactory(),
-            new SettingsKey.ToggleFactory(),
-        };
+        public readonly Type SettingsType;
+        private readonly ISettingsKeyFactory[] _factories;
+        private readonly ISettingsStorage _storage;
+        private readonly ISettingsHash _hash;
+        private readonly string _hashSalt;
+        private readonly Action _onChangedCallback;
+        private readonly SettingsPage<VoidSettingsKeyData> _innserPage;
 
-        public Type SettingsType { get; private set; }
         public string UserId { get; private set; } = "";
         public string HashedUserId { get; private set; } = "";
-        private ISettingsKeyFactory[] _factories;
-        private Action _onChangedCallback;
-        private ISettingsStorage _storage;
-        private IUserIdHash _hash;
-        private string _hashSalt;
-        private SettingsPage<VoidSettingsKeyData> _innserPage;
 
         internal void OnApplyChanges() => _onChangedCallback?.Invoke();
 
@@ -31,33 +24,9 @@ namespace FDB.Components.Settings
         public SettingsController(
             string userId,
             Type settingsType,
-            params ISettingsKeyFactory[] userFactories)
-        {
-            Init(userId, settingsType, SettingsStorageAttribute.ResolveStorage(settingsType), userFactories);
-        }
-
-        public SettingsController(
-            string userId,
-            Type settingsType,
-            StorageType storageType,
-            params ISettingsKeyFactory[] userFactories)
-        {
-            Init(userId, settingsType, storageType.Resolve(settingsType), userFactories);
-        }
-
-        public SettingsController(
-            string userId,
-            Type settingsType,
             ISettingsStorage storage,
-            params ISettingsKeyFactory[] userFactories)
-        {
-            Init(userId, settingsType, storage, userFactories);
-        }
-
-        private void Init(
-            string userId,
-            Type settingsType,
-            ISettingsStorage storage,
+            ISettingsHash hash,
+            string hashSalt,
             params ISettingsKeyFactory[] userFactories)
         {
             if (!settingsType.IsClass)
@@ -69,10 +38,10 @@ namespace FDB.Components.Settings
                 throw new ArgumentException($"Excepted static class");
             }
             SettingsType = settingsType;
-            _factories = userFactories.Concat(DefaultFactories).ToArray();
+            _factories = userFactories.Concat(DefaultKeyFactories).ToArray();
+            _storage = storage;
+            _hash = hash;
             _onChangedCallback = OnApplySettingsAttribute.ResolveCallback(settingsType);
-            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
-            _hash = SettingsUserIdHashAttribute.Resolve(settingsType, out _hashSalt);
             _innserPage = CreatePage<VoidSettingsKeyData>();
             if (userId != null)
             {

@@ -73,7 +73,7 @@ namespace FDB.Components.Settings
                 {
                     if (GUILayout.Button("Apply"))
                     {
-                        Page.Apply();
+                        Page.Apply(true);
                     }
                     if (GUILayout.Button("Reset"))
                     {

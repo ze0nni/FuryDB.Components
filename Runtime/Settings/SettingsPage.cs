@@ -37,15 +37,18 @@ namespace FDB.Components.Settings
             }
         }
 
-        public void Apply()
+        public void Apply(bool save)
         {
             foreach (var group in Groups)
             {
                 group.Apply();
             }
-            Controller.Save(this);
             Controller.OnApplyChanges();
             IsChanged = false;
+            if (save)
+            {
+                Controller.Save(this);
+            }
         }
 
         public void Reset()

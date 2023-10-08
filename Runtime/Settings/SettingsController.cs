@@ -112,7 +112,7 @@ namespace FDB.Components.Settings
         {
             UserId = userId;
             _innserPage.LoadDefault();
-            _innserPage.Apply();
+            _innserPage.Apply(false);
             Load();
         }
 
@@ -123,13 +123,13 @@ namespace FDB.Components.Settings
             {
                 _innserPage.Load(reader);
             }
-            _innserPage.Apply();
+            _innserPage.Apply(false);
         }
 
         public void LoadDefault()
         {
             _innserPage.LoadDefault();
-            _innserPage.Apply();
+            _innserPage.Apply(false);
         }
 
         public void Save()

@@ -59,7 +59,6 @@ namespace FDB.Components.Settings
                         throw new ArgumentNullException($"{GetType().FullName} disposed");
                     }
                     PlayerPrefs.SetString(key.KeyOf(_userId), key.StringValue);
-                    Debug.Log($"{key.KeyOf(_userId)} = {key.StringValue}");
                 }
 
                 public void Dispose()

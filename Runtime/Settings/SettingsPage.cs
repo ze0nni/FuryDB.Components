@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace FDB.Components.Settings
 {
@@ -28,14 +29,6 @@ namespace FDB.Components.Settings
             IsChanged = true;
         }
 
-        internal void Load(IReadOnlyDictionary<string, string> map)
-        {
-            foreach (var group in Groups)
-            {
-                group.Load(map);
-            }
-        }
-
         public void LoadDefault()
         {
             foreach (var group in Groups)
@@ -50,6 +43,7 @@ namespace FDB.Components.Settings
             {
                 group.Apply();
             }
+            Controller.Save(this);
             Controller.OnApplyChanges();
             IsChanged = false;
         }
@@ -61,6 +55,22 @@ namespace FDB.Components.Settings
                 group.Reset();
             }
             IsChanged = false;
+        }
+
+        internal void Load(ISettingsReader reader)
+        {
+            foreach (var group in Groups)
+            {
+                group.Load(reader);
+            }
+        }
+
+        internal void Save(ISettingsWriter writer)
+        {
+            foreach (var group in Groups)
+            {
+                group.Save(writer);
+            }
         }
     }
 

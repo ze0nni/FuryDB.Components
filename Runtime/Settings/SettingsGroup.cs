@@ -7,7 +7,6 @@ namespace FDB.Components.Settings
     public abstract class SettingsGroup
     {
         public readonly string Name;
-        public readonly string Path;
         public readonly SettingsPage Page;
         public readonly Type GroupType;
         public IReadOnlyList<SettingsKey> Keys { get; private set; }
@@ -17,7 +16,6 @@ namespace FDB.Components.Settings
         internal SettingsGroup(SettingsPage page, Type groupType)
         {
             Name = groupType.Name;
-            Path = $"{page.Name}.{Name}";
             Page = page;
             GroupType = groupType;
         }
@@ -33,17 +31,25 @@ namespace FDB.Components.Settings
             Page.OnKeyChanged(key);
         }
 
-        internal void Load(IReadOnlyDictionary<string, string> map)
+        internal void Load(ISettingsReader reader)
         {
             foreach (var key in Keys)
             {
-                if (map.TryGetValue(key.Path, out var str))
+                if (reader.Read(key, out var str))
                 {
                     key.Load(str);
                 } else
                 {
                     key.Reset();
                 }
+            }
+        }
+
+        internal void Save(ISettingsWriter writer)
+        {
+            foreach (var key in Keys)
+            {
+                writer.Write(key);
             }
         }
 

@@ -17,13 +17,13 @@ namespace FDB.Components.Settings
 
         internal static void Store(SettingsKey key)
         {
-            var dKey = (key.Group.Page.Controller.SettingsType, key.Path);
+            var dKey = (key.Group.Page.Controller.SettingsType, key.Id);
             _defaults.TryAdd(dKey, key.KeyField.GetValue(null));
         }
 
         internal static object Read(SettingsKey key)
         {
-            var dKey = (key.Group.Page.Controller.SettingsType, key.Path);
+            var dKey = (key.Group.Page.Controller.SettingsType, key.Id);
             _defaults.TryGetValue(dKey, out var value);
             return value;
         }
@@ -32,7 +32,7 @@ namespace FDB.Components.Settings
     public abstract partial class SettingsKey
     {
         public readonly string Name;
-        public readonly string Path;
+        public readonly string Id;
         public readonly SettingsGroup Group;
         public readonly Type KeyType;
         public readonly FieldInfo KeyField;
@@ -45,7 +45,7 @@ namespace FDB.Components.Settings
         internal SettingsKey(SettingsGroup group, FieldInfo keyField)
         {
             Name = keyField.FieldType.Name;
-            Path = $"{group.Path}.{Name}";
+            Id = $"{group.Name}.{Name}";
             Group = group;
             KeyType = keyField.FieldType;
             KeyField = keyField;
@@ -128,7 +128,7 @@ namespace FDB.Components.Settings
                 }
                 if (!ValidateValue(ref value))
                 {
-                    throw new ArgumentException($"Invalid value \"{value}\" for key {Path}");
+                    throw new ArgumentException($"Invalid value \"{value}\" for key {Id}");
                 }
                 _value = value;
                 UpdateStringValue(ValueToString(value));

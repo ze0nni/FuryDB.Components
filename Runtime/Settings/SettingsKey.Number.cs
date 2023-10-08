@@ -29,8 +29,8 @@ namespace FDB.Components.Settings
             }
 
             public readonly NumberType Type;
-            public readonly int? Min;
-            public readonly int? Max;
+            public readonly float? Min;
+            public readonly float? Max;
 
             public NumberKey(SettingsGroup<TKeyData> group, FieldInfo keyField) : base(group, keyField)
             {
@@ -46,6 +46,23 @@ namespace FDB.Components.Settings
                 {
                     throw new ArgumentException("Excepted float or int");
                 }
+            }
+
+            protected override bool ValidateValue(ref float value)
+            {
+                if (Min != null)
+                {
+                    value = Math.Max(Min.Value, value);
+                }
+                if (Max != null)
+                {
+                    value = Math.Min(Max.Value, value);
+                }
+                if (Type == NumberType.Int)
+                {
+                    value = (int)value;
+                }
+                return true;
             }
 
             protected override float ReadValue(object value)

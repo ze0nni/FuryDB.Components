@@ -24,6 +24,11 @@ namespace FDB.Components.Settings
             {
             }
 
+            protected override bool ValidateValue(ref bool value)
+            {
+                return true;
+            }
+
             protected override bool ReadValue(object value)
             {
                 switch (value)

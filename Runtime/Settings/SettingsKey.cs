@@ -100,6 +100,10 @@ namespace FDB.Components.Settings
                 {
                     return;
                 }
+                if (!ValidateValue(ref value))
+                {
+                    throw new ArgumentException($"Invalid value \"{value}\" for key {Path}");
+                }
                 _value = value;
                 OnKeyChanged();
             }
@@ -122,9 +126,12 @@ namespace FDB.Components.Settings
 
         protected sealed override void ResetValue()
         {
-            _value = ReadValue(KeyField.GetValue(null));
+            var value = ReadValue(KeyField.GetValue(null));
+            ValidateValue(ref value);
+            _value = ReadValue(value);
         }
 
+        protected abstract bool ValidateValue(ref TValue value);
         protected abstract TValue ReadValue(object value);
         protected abstract object WriteValue(TValue value);
     }

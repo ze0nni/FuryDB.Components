@@ -80,6 +80,11 @@ namespace FDB.Components.Settings
                 return _names[index];
             }
 
+            protected override bool ValidateValue(ref string value)
+            {
+                return Array.IndexOf(_names, value) != -1;
+            }
+
             protected override object WriteValue(string value)
             {
                 var e = Enum.Parse(KeyType, value);

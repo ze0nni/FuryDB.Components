@@ -81,6 +81,10 @@ namespace FDB.Components.Settings
                     }
                 }
                 GUI.enabled = true;
+                if (GUILayout.Button("Default"))
+                {
+                    Page.LoadDefault();
+                }
                 if (GUILayout.Button("Close"))
                 {
 

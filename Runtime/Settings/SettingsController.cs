@@ -75,6 +75,21 @@ namespace FDB.Components.Settings
             return data;
         }
 
+        public void Load()
+        {
+
+        }
+
+        public void LoadDefault()
+        {
+
+        }
+
+        public void Save()
+        {
+
+        }
+
         public override string ToString()
         {
             return $"{typeof(SettingsController).FullName}({SettingsType.FullName})";

@@ -28,6 +28,21 @@ namespace FDB.Components.Settings
             IsChanged = true;
         }
 
+        internal void Load(IReadOnlyDictionary<string, string> map)
+        {
+            foreach (var group in Groups)
+            {
+                group.Load(map);
+            }
+        }
+
+        public void LoadDefault()
+        {
+            foreach (var group in Groups)
+            {
+                group.LoadDefault();
+            }
+        }
 
         public void Apply()
         {

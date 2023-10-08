@@ -33,6 +33,28 @@ namespace FDB.Components.Settings
             Page.OnKeyChanged(key);
         }
 
+        internal void Load(IReadOnlyDictionary<string, string> map)
+        {
+            foreach (var key in Keys)
+            {
+                if (map.TryGetValue(key.Path, out var str))
+                {
+                    key.Load(str);
+                } else
+                {
+                    key.Reset();
+                }
+            }
+        }
+
+        internal void LoadDefault()
+        {
+            foreach (var key in Keys)
+            {
+                key.LoadDefault();
+            }
+        }
+
         internal void Apply()
         {
             foreach (var key in Keys)

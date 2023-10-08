@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
@@ -8,6 +9,24 @@ namespace FDB.Components.Settings
     {
         SettingsKey<TKeyData> Produce<TKeyData>(SettingsGroup<TKeyData> group, FieldInfo keyField)
             where TKeyData : ISettingsKeyData;
+    }
+
+    internal static class SettingsKeyDefault
+    {
+        private static readonly Dictionary<(Type, string), object> _defaults = new Dictionary<(Type, string), object>();
+
+        internal static void Store(SettingsKey key)
+        {
+            var dKey = (key.Group.Page.Controller.SettingsType, key.Path);
+            _defaults.TryAdd(dKey, key.KeyField.GetValue(null));
+        }
+
+        internal static object Read(SettingsKey key)
+        {
+            var dKey = (key.Group.Page.Controller.SettingsType, key.Path);
+            _defaults.TryGetValue(dKey, out var value);
+            return value;
+        }
     }
 
     public abstract partial class SettingsKey
@@ -30,6 +49,7 @@ namespace FDB.Components.Settings
             Group = group;
             KeyType = keyField.FieldType;
             KeyField = keyField;
+            SettingsKeyDefault.Store(this);
         }
 
         protected void OnKeyChanged()
@@ -42,6 +62,9 @@ namespace FDB.Components.Settings
         {
 
         }
+
+        internal abstract void LoadDefault();
+        internal abstract void Load(string str);
 
         internal protected void Apply()
         {
@@ -121,6 +144,19 @@ namespace FDB.Components.Settings
         {
             base.Setup();
             ResetValue();
+        }
+
+        internal sealed override void Load(string str)
+        {
+            var value = ValueFromString(str);
+            ValidateValue(ref value);
+            _value = value;
+            UpdateStringValue(ValueToString(value));
+        }
+
+        internal sealed override void LoadDefault()
+        {
+            Value = ReadValue(SettingsKeyDefault.Read(this));
         }
 
         protected sealed override void ApplyValue()

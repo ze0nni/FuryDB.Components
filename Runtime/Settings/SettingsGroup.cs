@@ -35,6 +35,10 @@ namespace FDB.Components.Settings
         {
             foreach (var key in Keys)
             {
+                if (key.Type != KeyType.Key)
+                {
+                    continue;
+                }
                 if (reader.Read(key, out var str))
                 {
                     key.Load(str);
@@ -49,6 +53,10 @@ namespace FDB.Components.Settings
         {
             foreach (var key in Keys)
             {
+                if (key.Type != KeyType.Key)
+                {
+                    continue;
+                }
                 writer.Write(key);
             }
         }
@@ -97,11 +105,16 @@ namespace FDB.Components.Settings
             var keys = new List<SettingsKey<TKeyData>>();
             foreach (var field in GroupType.GetFields())
             {
-                var key = Page.Controller.CreateKey(this, field);
-                if (field != null)
+                var key = Page.Controller.CreateKey(this, field, out var headerKey);
+                if (field == null)
                 {
-                    keys.Add(key);
+                    continue;
                 }
+                if (headerKey != null)
+                {
+                    keys.Add(headerKey);
+                }
+                keys.Add(key);
             }
             foreach (var key in keys)
             {

@@ -11,13 +11,23 @@ namespace FDB.Components.Settings
             where TKeyData : ISettingsKeyData;
     }
 
+    public enum KeyType
+    {
+        Key,
+        Header
+    }
+
     public abstract partial class SettingsKey
     {
-        public readonly string Name;
+        public readonly string KeyName;
+        public readonly KeyType Type;
         public readonly string Id;
         public readonly SettingsGroup Group;
         public readonly Type KeyType;
         public readonly FieldInfo KeyField;
+        public readonly ICustomAttributeProvider KeyAttributesProvider;
+        public readonly HeaderAttribute HeaderAttr;
+        public readonly IReadOnlyList<Attribute> HeaderAttributes;
 
         public string StringValue { get; private set; }
         internal void UpdateStringValue(string value) => StringValue = value;
@@ -26,12 +36,25 @@ namespace FDB.Components.Settings
 
         internal SettingsKey(SettingsGroup group, FieldInfo keyField)
         {
-            Name = keyField.Name;
-            Id = $"{group.Name}.{Name}";
+            KeyName = keyField.Name;
+            Type = Settings.KeyType.Key;
+            Id = $"{group.Name}.{KeyName}";
             Group = group;
             KeyType = keyField.FieldType;
             KeyField = keyField;
+            KeyAttributesProvider = keyField;
             SettingsController.DefaultKeys.Store(this);
+        }
+
+        internal SettingsKey(SettingsGroup group, HeaderAttribute header, ICustomAttributeProvider keyAttributesProvider)
+        {
+            KeyName = null;
+            Type = Settings.KeyType.Header;
+            Id = null;
+            Group = group;
+            KeyType = typeof(void);
+            KeyAttributesProvider = keyAttributesProvider;
+            HeaderAttr = header;
         }
 
         protected void OnKeyChanged()
@@ -71,6 +94,11 @@ namespace FDB.Components.Settings
         public TKeyData Data { get; private set; }
 
         internal SettingsKey(SettingsGroup<TKeyData> group, FieldInfo keyField) : base(group, keyField)
+        {
+            Group = group;
+        }
+
+        internal SettingsKey(SettingsGroup<TKeyData> group, HeaderAttribute header, ICustomAttributeProvider keyAttributesProvide) : base(group, header, keyAttributesProvide)
         {
             Group = group;
         }

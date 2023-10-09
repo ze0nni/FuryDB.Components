@@ -55,8 +55,16 @@ namespace FDB.Components.Settings
 
                 foreach (var key in group.Keys)
                 {
-                    using (new GUILayout.HorizontalScope()) {
-                        key.OnGUILayout();
+                    if (key is SettingsKey.Header<TKeysData> headerkey)
+                    {
+                        GUILayout.Box(headerkey.Data.Name, GUILayout.ExpandWidth(true));
+                    }
+                    else
+                    {
+                        using (new GUILayout.HorizontalScope())
+                        {
+                            key.OnGUILayout();
+                        }
                     }
                 }
 

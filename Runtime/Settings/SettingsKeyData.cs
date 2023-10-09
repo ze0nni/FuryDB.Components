@@ -1,4 +1,5 @@
 using System.Reflection;
+using UnityEngine;
 
 namespace FDB.Components.Settings
 {
@@ -7,6 +8,7 @@ namespace FDB.Components.Settings
         string Name { get; }
         void Setup(SettingsKey key);
         void Setup(FieldInfo field);
+        void Setup(SettingsGroup group, HeaderAttribute header, ICustomAttributeProvider attributeProvider);
     }
 
     public class VoidSettingsKeyData : ISettingsKeyData
@@ -21,6 +23,11 @@ namespace FDB.Components.Settings
         void ISettingsKeyData.Setup(FieldInfo field)
         {
             Name = field.Name;
+        }
+
+        void ISettingsKeyData.Setup(SettingsGroup group, HeaderAttribute header, ICustomAttributeProvider attributeProvider)
+        {
+            Name = header.header;
         }
     }
 }

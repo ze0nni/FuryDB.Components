@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
 
 namespace FDB.Components.Settings
 {
@@ -61,25 +62,46 @@ namespace FDB.Components.Settings
             return page;
         }
 
-        internal SettingsKey<TKeyData> CreateKey<TKeyData>(SettingsGroup<TKeyData> group, FieldInfo keyField)
+        internal SettingsKey<TKeyData> CreateKey<TKeyData>(
+            SettingsGroup<TKeyData> group, 
+            FieldInfo keyField,
+            out SettingsKey<TKeyData> headerKey)
             where TKeyData: ISettingsKeyData
-        { 
+        {
+            var result = default(SettingsKey<TKeyData>);
+            headerKey = null;
             foreach (var factory in _factories)
             {
                 var key = factory.Produce<TKeyData>(group, keyField);
                 if (key != null)
                 {
-                    return key;
+                    result = key;
                 }
             }
-            return null;
+            if (result != null)
+            {
+                var attr = keyField.GetCustomAttribute<HeaderAttribute>();
+                if (attr != null)
+                {
+                    headerKey = new SettingsKey.Header<TKeyData>(group, attr, keyField);
+                }
+            }
+
+            return result;
         }
 
         internal TKeyData CreateKeyData<TKeyData>(SettingsKey key)
             where TKeyData : ISettingsKeyData
         {
             var data = Activator.CreateInstance<TKeyData>();
-            data.Setup(key);
+            if (key.HeaderAttr != null)
+            {
+                data.Setup(key.Group, key.HeaderAttr, key.KeyAttributesProvider);
+            }
+            else
+            {
+                data.Setup(key);
+            }
             return data;
         }
 

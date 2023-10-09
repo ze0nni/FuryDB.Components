@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace FDB.Components.Settings
 {
@@ -9,7 +11,43 @@ namespace FDB.Components.Settings
         public readonly string Name;
         public readonly SettingsPage Page;
         public readonly Type GroupType;
-        public IReadOnlyList<SettingsKey> Keys { get; private set; }
+
+        private bool _isDirtyKeys;
+        internal void MarkKeysDirty() => _isDirtyKeys = true;
+        private SettingsKey[] _keys;
+        public IReadOnlyList<SettingsKey> Keys
+        {
+            get
+            {
+                if (_isDirtyKeys)
+                {
+                    _isDirtyKeys = false;
+                    foreach (var k in _keys)
+                    {
+                        k.UpdateDisplayState(this);
+                    }
+                }
+                return _keys;
+            }
+        }
+
+        internal readonly Dictionary<string, SettingsKey> _keysMap = new Dictionary<string, SettingsKey>();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public SettingsKey GetKey(string keyNameOrKeyId)
+        {
+            if (_keysMap.TryGetValue(keyNameOrKeyId, out var value))
+            {
+                return value;
+            }
+            return Page.GetKey(keyNameOrKeyId);
+        }
+
+        public T GetKey<T>(string keyNameOrKeyId) 
+            where T: SettingsKey
+        {
+            return (T)GetKey(keyNameOrKeyId);
+        }
 
         public bool IsChanged { get; private set; }
         public event Action<SettingsKey> OnKeyChanged;
@@ -23,12 +61,16 @@ namespace FDB.Components.Settings
 
         protected void SetKeys(IEnumerable<SettingsKey> keys)
         {
-            Keys = keys.ToArray();
+            _keys = keys.ToArray();
         }
 
         internal void NotifyKeyChanged(SettingsKey key)
         {
             IsChanged = true;
+            foreach (var k in _keys)
+            {
+                k.UpdateDisplayState(this);
+            }
             OnKeyChanged?.Invoke(key);
             Page.NotifyKeyChanged(key);
         }
@@ -103,7 +145,6 @@ namespace FDB.Components.Settings
 
         internal void Setup()
         {
-
             var keys = new List<SettingsKey<TKeyData>>();
             foreach (var field in GroupType.GetFields())
             {
@@ -121,6 +162,9 @@ namespace FDB.Components.Settings
             foreach (var key in keys)
             {
                 key.Setup();
+                if (key.Type == KeyType.Key) {
+                    _keysMap[key.KeyName] = key;
+                }
             }
             Keys = keys;
             SetKeys(keys.Cast<SettingsKey>());

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace FDB.Components.Settings
@@ -10,6 +11,19 @@ namespace FDB.Components.Settings
         public readonly string Name;
         public readonly SettingsController Controller;
         public IReadOnlyList<SettingsGroup> Groups { get; private set; }
+
+        internal readonly Dictionary<string, SettingsKey> _keysMap = new Dictionary<string, SettingsKey>();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public SettingsKey GetKey(string id) {
+            _keysMap.TryGetValue(id, out var key);
+            return key;
+        }
+        public T GetKey<T>(string id) 
+            where T : SettingsKey
+        {
+            return (T)GetKey(id);
+        }
 
         public bool IsChanged { get; private set; }
         public event Action<SettingsKey> OnKeyChanged;
@@ -28,6 +42,10 @@ namespace FDB.Components.Settings
         internal void NotifyKeyChanged(SettingsKey key)
         {
             IsChanged = true;
+            foreach (var g in Groups)
+            {
+                g.MarkKeysDirty();
+            }
             OnKeyChanged?.Invoke(key);
     }
 
@@ -100,6 +118,14 @@ namespace FDB.Components.Settings
             foreach (var group in groups)
             {
                 group.Setup();
+                foreach (var key in group.Keys)
+                {
+                    if (key.Type != KeyType.Key)
+                    {
+                        continue;
+                    }
+                    _keysMap[key.Id] = key;
+                }
             }
             Groups = groups;
             SetGroups(groups.Cast<SettingsGroup>());

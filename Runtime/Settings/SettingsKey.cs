@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace FDB.Components.Settings
@@ -29,14 +30,35 @@ namespace FDB.Components.Settings
         public readonly HeaderAttribute HeaderAttr;
         public readonly IReadOnlyList<Attribute> HeaderAttributes;
 
-        public bool Enabled { get; private set; }
-        public bool Visible { get; private set; }
+        private bool _enabled;
+        public bool Enabled => _enabled;
+        private bool _visible;
+        public bool Visible => _visible;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void UpdateDisplayState(SettingsGroup group)
+        {
+            var enabled = _enabledPredicate == null ? true : _enabledPredicate(group, this);
+            var visible = _visiblePredicate == null ? true : _visiblePredicate(group, this);
+            if (_enabled == enabled && _visible == visible)
+            {
+                return;
+            }
+            _enabled = enabled;
+            _visible = visible;
+            OnKeyChanged?.Invoke(this);
+        }
 
         public string StringValue { get; private set; }
         internal void UpdateStringValue(string value) => StringValue = value;
 
         public bool IsChanged { get; private set; }
         public event Action<SettingsKey> OnKeyChanged;
+
+        public delegate bool DisplayPredecateDelegate(SettingsGroup group, SettingsKey key);
+
+        internal readonly DisplayPredecateDelegate _enabledPredicate;
+        internal readonly DisplayPredecateDelegate _visiblePredicate;
 
         internal SettingsKey(SettingsGroup group, FieldInfo keyField)
         {
@@ -47,7 +69,10 @@ namespace FDB.Components.Settings
             KeyType = keyField.FieldType;
             KeyField = keyField;
             KeyAttributesProvider = keyField;
-            SettingsController.DefaultKeys.Store(this);
+            _enabledPredicate = SettingsPredicateAttribute
+                .Resolve<SettingsEnabledAttribute>(group.GroupType, keyField);
+            _visiblePredicate = SettingsPredicateAttribute
+                .Resolve<SettingsVisibleAttribute>(group.GroupType, keyField);
         }
 
         internal SettingsKey(SettingsGroup group, HeaderAttribute header, ICustomAttributeProvider keyAttributesProvider)
@@ -59,6 +84,8 @@ namespace FDB.Components.Settings
             KeyType = typeof(void);
             KeyAttributesProvider = keyAttributesProvider;
             HeaderAttr = header;
+            _visiblePredicate = SettingsPredicateAttribute
+                .Resolve<SettingsVisibleAttribute>(group.GroupType, keyAttributesProvider);
         }
 
         protected void NotifyKeyChanged()
@@ -70,7 +97,7 @@ namespace FDB.Components.Settings
 
         internal virtual void Setup()
         {
-
+            UpdateDisplayState(Group);
         }
 
         internal abstract void LoadDefault();
@@ -110,6 +137,7 @@ namespace FDB.Components.Settings
 
         internal override void Setup()
         {
+            base.Setup();
            Data = Group.Page.Controller.CreateKeyData<TKeyData>(this);
         }
 

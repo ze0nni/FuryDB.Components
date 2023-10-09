@@ -55,6 +55,11 @@ namespace FDB.Components.Settings
 
                 foreach (var key in group.Keys)
                 {
+                    if (!key.Visible)
+                    {
+                        continue;
+                    }
+                    GUI.enabled = key.Enabled;
                     if (key is SettingsKey.Header<TKeysData> headerkey)
                     {
                         GUILayout.Box(headerkey.Data.Name, GUILayout.ExpandWidth(true));
@@ -67,7 +72,7 @@ namespace FDB.Components.Settings
                         }
                     }
                 }
-
+                GUI.enabled = true;
                 _scrollPosition = scrollView.scrollPosition;
             }
         }

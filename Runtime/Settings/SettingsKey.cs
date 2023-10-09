@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using static FDB.Components.Settings.SettingsController;
 
 namespace FDB.Components.Settings
 {
@@ -36,7 +37,7 @@ namespace FDB.Components.Settings
         public bool Visible => _visible;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void UpdateDisplayState(SettingsGroup group)
+        internal protected virtual void UpdateDisplayState(SettingsGroup group)
         {
             var enabled = _enabledPredicate == null ? true : _enabledPredicate(group, this);
             var visible = _visiblePredicate == null ? true : _visiblePredicate(group, this);
@@ -73,6 +74,10 @@ namespace FDB.Components.Settings
                 .Resolve<SettingsEnabledAttribute>(group.GroupType, keyField);
             _visiblePredicate = SettingsPredicateAttribute
                 .Resolve<SettingsVisibleAttribute>(group.GroupType, keyField);
+            if (Type == Settings.KeyType.Key)
+            {
+                DefaultKeys.Store(this);
+            }
         }
 
         internal SettingsKey(SettingsGroup group, HeaderAttribute header, ICustomAttributeProvider keyAttributesProvider)

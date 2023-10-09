@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using UnityEngine;
 
@@ -9,7 +10,10 @@ namespace FDB.Components.Settings
         private readonly SettingsPage<TKeysData> _page;
         private readonly GUIContent[] _groupNames;
 
-        public SettingsPageGUI(SettingsController controler)
+        public event Action OnCloseClick;
+
+        public SettingsPageGUI(
+            SettingsController controler)
         {
             _page = controler.CreatePage<TKeysData>();
             _groupNames = _page.Groups.Select(x => new GUIContent(x.Name)).ToArray();
@@ -21,7 +25,27 @@ namespace FDB.Components.Settings
             ? null
             : _page.Groups[_selectedGroup];
 
-        public void OnGUILayout()
+        public void OnScreenGUI()
+        {
+            var width = Screen.width;
+            var height = Screen.height;
+
+            GUI.Box(new Rect(0, 0, width, height), "");
+
+            using (new GUILayout.AreaScope(
+                new Rect(
+                    width / 4,
+                    height / 8,
+                    width / 2,
+                    height - (height / 4))))
+            {
+                OnGroupsGUILayout();
+                OnGroupKeysGUILayout(SelectedGroup);
+                OnPageActionsGUILayout();
+            }
+        }
+
+        public void OnInspectorGUILayout()
         {
             OnGroupsGUILayout();
             OnGroupKeysGUILayout(SelectedGroup);
@@ -99,7 +123,7 @@ namespace FDB.Components.Settings
                 }
                 if (GUILayout.Button("Close"))
                 {
-
+                    OnCloseClick?.Invoke();
                 }
             }
         }

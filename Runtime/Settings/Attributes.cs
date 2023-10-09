@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using UnityEngine;
 
@@ -250,94 +249,9 @@ namespace FDB.Components.Settings
     }
 
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
-    public abstract class SettingsPredicateAttribute : Attribute
-    {
-        public readonly string KeyId;
-        public readonly string[] KeyValues;
-
-        public readonly string PredicateName;
-
-        private static Type[] _inputArgs = new Type[] { typeof(SettingsKey) };
-        private static ParameterModifier[] _inputModifiers = new ParameterModifier[] { };
-
-        public SettingsPredicateAttribute(string key, params string[] values)
-        {
-            KeyId = key;
-            KeyValues = values;
-        }
-
-        public SettingsPredicateAttribute(string predicateName)
-        {
-            PredicateName = predicateName;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool CheckKeyValue(SettingsGroup group, string id, string[] values)
-        {
-            if (values == null)
-            {
-                Debug.LogWarning($"Key not values of check id =\"{id}\" ");
-                return true;
-            }
-            var key = group.GetKey(id);
-            if (key == null)
-            {
-                Debug.LogWarning($"Key with id =\"{id}\" not found");
-                return true;
-            }
-            return Array.IndexOf(values, key.StringValue) != -1;
-        }
-
-        public static SettingsKey.DisplayPredecateDelegate Resolve<T>(
-            Type groupType, 
-            ICustomAttributeProvider provider)
-            where T : SettingsPredicateAttribute
-        {
-            var attr = provider.GetCustomAttributes(typeof(T), false).Cast<T>().FirstOrDefault();
-            if (attr == null)
-            {
-                return null;
-            }
-
-            if (!string.IsNullOrEmpty(attr.KeyId))
-            {
-                var id = attr.KeyId;
-                var values = attr.KeyValues;
-                return (group, key) => CheckKeyValue(group, id, values);
-            }
-            else if (!string.IsNullOrEmpty(attr.PredicateName))
-            {
-                var predicate = groupType.GetMethod(
-                    attr.PredicateName,
-                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static,
-                    null,
-                    _inputArgs,
-                    _inputModifiers);
-
-                if (predicate == null)
-                {
-                    Debug.LogWarning($"Predicate \"bool {attr.PredicateName}({nameof(SettingsKey)})\" not foind in {groupType.FullName}");
-                    return null;
-                }
-                return (SettingsKey.DisplayPredecateDelegate)Delegate
-                    .CreateDelegate(typeof(SettingsKey.DisplayPredecateDelegate), null, predicate);
-            } else
-            {
-                Debug.LogWarning($"No predicate found");
-            }
-
-            return null;
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
     public sealed class SettingsEnabledAttribute : SettingsPredicateAttribute
     {
-        public SettingsEnabledAttribute(string key, params string[] values) : base(key, values)
-        {
-        }
-
-        public SettingsEnabledAttribute(string predicateName) : base(predicateName)
+        public SettingsEnabledAttribute(string key, Op op, params string[] values) : base(key, op, values)
         {
         }
     }
@@ -345,12 +259,7 @@ namespace FDB.Components.Settings
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
     public sealed class SettingsVisibleAttribute : SettingsPredicateAttribute
     {
-        public SettingsVisibleAttribute(string key, params string[] values) : base(key, values)
-        {
-        }
-
-
-        public SettingsVisibleAttribute(string predicateName) : base(predicateName)
+        public SettingsVisibleAttribute(string key, Op op, params string[] values) : base(key, op, values)
         {
         }
     }

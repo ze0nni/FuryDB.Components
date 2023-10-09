@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -28,7 +29,7 @@ namespace FDB.Components.Settings
             ISettingsStorage storage,
             ISettingsHash hash,
             string hashSalt,
-            params ISettingsKeyFactory[] userFactories)
+            IEnumerable<ISettingsKeyFactory> factories)
         {
             if (!settingsType.IsClass)
             {
@@ -39,7 +40,7 @@ namespace FDB.Components.Settings
                 throw new ArgumentException($"Excepted static class");
             }
             SettingsType = settingsType;
-            _factories = userFactories.Concat(DefaultKeyFactories).ToArray();
+            _factories = factories.ToArray();
             _storage = storage;
             _hash = hash;
             _onChangedCallback = OnApplySettingsAttribute.ResolveCallback(settingsType);

@@ -8,6 +8,47 @@ using UnityEngine;
 
 namespace FDB.Components.Settings
 {
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    public sealed class SettingsKeyFactoryAttribute : Attribute
+    {
+        public readonly IReadOnlyList<Type> Factories;
+        public SettingsKeyFactoryAttribute(params Type[] factories)
+        {
+            Factories = factories.ToArray();
+        }
+
+        internal static IReadOnlyList<ISettingsKeyFactory> Resolve(Type settingsType)
+        {
+            var attr = settingsType.GetCustomAttribute<SettingsKeyFactoryAttribute>();
+            if (attr == null)
+            {
+                return new ISettingsKeyFactory[0];
+            }
+            return attr
+                .Factories
+                .Select(type =>
+                {
+                    if (!typeof(ISettingsKeyFactory).IsAssignableFrom(type))
+                    {
+                        Debug.LogWarning($"Type {type.FullName} not implements {typeof(ISettingsKeyFactory).Name}");
+                        return null;
+                    }
+                    try
+                    {
+                        return (ISettingsKeyFactory)Activator.CreateInstance(type);
+                    } catch (Exception exc)
+                    {
+                        Debug.LogError($"Exception when try to create instance of {type.FullName}");
+                        Debug.LogException(exc);
+                    }
+                    return null;
+                })
+                .Where(x => x != null)
+                .ToArray();
+
+        }
+    }
+
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class OnApplySettingsAttribute : Attribute
     {

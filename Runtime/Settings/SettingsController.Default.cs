@@ -6,7 +6,7 @@ namespace FDB.Components.Settings
 {
     public sealed partial class SettingsController
     {
-        public static IReadOnlyList<ISettingsKeyFactory> DefaultKeyFactories = new ISettingsKeyFactory[] {
+        internal static IReadOnlyList<ISettingsKeyFactory> DefaultKeyFactories = new ISettingsKeyFactory[] {
             new SettingsKey.EnumKeyFactory(),
             new SettingsKey.NumberKeyFactory(),
             new SettingsKey.ToggleFactory(),
@@ -14,19 +14,6 @@ namespace FDB.Components.Settings
 
         private static readonly List<ISettingsKeyFactory> _userKeyFactories = new List<ISettingsKeyFactory>();
         public static IReadOnlyList<ISettingsKeyFactory> UserKeyFactories => _userKeyFactories;
-
-        private static bool _lockRegisterFactories;
-        public static void RegisterKeyFactory(ISettingsKeyFactory factory)
-        {
-            if (_lockRegisterFactories)
-            {
-                throw new Exception($"You must call {nameof(SettingsController)}.{nameof(RegisterKeyFactory)}() before first time call {nameof(SettingsController)}.{nameof(New)}");
-            }
-            _userKeyFactories.Add(factory);
-        }
-
-        public static IReadOnlyList<ISettingsKeyFactory> KeyFactories
-            => DefaultKeyFactories.Concat(_userKeyFactories).ToArray();
 
         public static class DefaultKeys
         {
@@ -47,30 +34,42 @@ namespace FDB.Components.Settings
             }
         }
 
+        private static Dictionary<Type, IReadOnlyList<ISettingsKeyFactory>> _keyFactories
+            = new Dictionary<Type, IReadOnlyList<ISettingsKeyFactory>>();
+
+        internal static IReadOnlyList<ISettingsKeyFactory> GetKeyFactories(Type settingsType)
+        {
+            if (!_keyFactories.TryGetValue(settingsType, out var list))
+            {
+                list = SettingsKeyFactoryAttribute
+                    .Resolve(settingsType)
+                    .Concat(DefaultKeyFactories)
+                    .ToArray();
+                _keyFactories.Add(settingsType, list);
+            }
+            return list;
+        }
+
         public static SettingsController New(Type settingsType)
         {
-            _lockRegisterFactories = true;
-
             return new SettingsController(
                 "default_user",
                 settingsType,
                 SettingsStorageAttribute.ResolveStorage(settingsType),
                 SettingHashAttribute.Resolve(settingsType, out var hashSalt),
                 hashSalt,
-                KeyFactories.ToArray());
+                GetKeyFactories(settingsType));
         }
 
         public static SettingsController New(string userId, Type settingsType)
         {
-            _lockRegisterFactories = true;
-
             return new SettingsController(
                 userId,
                 settingsType,
                 SettingsStorageAttribute.ResolveStorage(settingsType),
                 SettingHashAttribute.Resolve(settingsType, out var hashSalt),
                 hashSalt,
-                KeyFactories.ToArray());
+                GetKeyFactories(settingsType));
         }
     }
 }

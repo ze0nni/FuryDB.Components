@@ -29,7 +29,7 @@ namespace FDB.Components.Settings
                 Float
             }
 
-            public readonly NumberType Type;
+            public readonly NumberType NumType;
             public readonly float? Min;
             public readonly float? Max;
 
@@ -37,11 +37,11 @@ namespace FDB.Components.Settings
             {
                 if (KeyType == typeof(int))
                 {
-                    Type = NumberType.Int;
+                    NumType = NumberType.Int;
                 }
                 else if (KeyType == typeof(float))
                 {
-                    Type = NumberType.Float;
+                    NumType = NumberType.Float;
                 }
                 else
                 {
@@ -65,7 +65,7 @@ namespace FDB.Components.Settings
                 {
                     value = Math.Min(Max.Value, value);
                 }
-                if (Type == NumberType.Int)
+                if (NumType == NumberType.Int)
                 {
                     value = (int)value;
                 }
@@ -84,14 +84,14 @@ namespace FDB.Components.Settings
 
             protected override object WriteValue(float value)
             {
-                switch (Type)
+                switch (NumType)
                 {
                     case NumberType.Int:
                         return (int)value;
                     case NumberType.Float:
                         return value;
                     default:
-                        throw new ArgumentNullException(Type.ToString());
+                        throw new ArgumentNullException(NumType.ToString());
                 }
             }
 

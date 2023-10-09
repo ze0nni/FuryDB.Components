@@ -93,7 +93,7 @@ namespace FDB.Components.Settings
                 .Resolve<SettingsVisibleAttribute>(group.GroupType, keyAttributesProvider);
         }
 
-        protected void NotifyKeyChanged()
+        protected virtual void NotifyKeyChanged()
         {
             IsChanged = true;
             OnKeyChanged?.Invoke(this);

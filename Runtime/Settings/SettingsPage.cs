@@ -28,6 +28,18 @@ namespace FDB.Components.Settings
         public bool IsChanged { get; private set; }
         public event Action<SettingsKey> OnKeyChanged;
 
+        public IReadOnlyDictionary<string, SettingsKey> KeysToLoad
+            => Groups
+            .SelectMany(g => g.Keys)
+            .Where(k => k.Type == KeyType.Key)
+            .ToDictionary(k => k.Id);
+
+        public IReadOnlyList<SettingsKey> KeysToSave
+            => Groups
+            .SelectMany(g => g.Keys)
+            .Where(k => k.Type == KeyType.Key).
+            ToArray();
+
         internal SettingsPage(SettingsController controller)
         {
             Name = controller.SettingsType.Name;
@@ -47,9 +59,18 @@ namespace FDB.Components.Settings
                 g.MarkKeysDirty();
             }
             OnKeyChanged?.Invoke(key);
-    }
+        }
 
-    public void LoadDefault()
+        internal void NotifySave()
+        {
+            IsChanged = false;
+            foreach (var g in Groups)
+            {
+                g.NotifySave();
+            }
+        }
+
+        public void ResetDefault()
         {
             foreach (var group in Groups)
             {
@@ -78,22 +99,6 @@ namespace FDB.Components.Settings
                 group.Reset();
             }
             IsChanged = false;
-        }
-
-        internal void Load(ISettingsReader reader)
-        {
-            foreach (var group in Groups)
-            {
-                group.Load(reader);
-            }
-        }
-
-        internal void Save(ISettingsWriter writer)
-        {
-            foreach (var group in Groups)
-            {
-                group.Save(writer);
-            }
         }
     }
 

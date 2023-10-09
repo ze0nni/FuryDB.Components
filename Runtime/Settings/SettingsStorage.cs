@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace FDB.Components.Settings
 {
@@ -11,18 +12,8 @@ namespace FDB.Components.Settings
 
     public interface ISettingsStorage
     {
-        IDisposable Write(string userId, out ISettingsWriter writer);
-        IDisposable Read(string userId, out ISettingsReader reader);
-    }
-
-    public interface ISettingsWriter
-    {
-        void Write(SettingsKey key);
-    }
-
-    public interface ISettingsReader
-    {
-        bool Read(SettingsKey key, out string value);
+        void Save(string userId, IReadOnlyList<SettingsKey> keys);
+        void Load(string userId, IReadOnlyDictionary<string, SettingsKey> keys);
     }
 
     internal static partial class SettingsStorage

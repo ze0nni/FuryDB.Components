@@ -80,7 +80,7 @@ namespace FDB.Components.Settings
             }
         }
 
-        private static SettingsKey.DisplayPredecateDelegate IsFalse(string id)
+        private static SettingsKey.DisplayPredecateDelegate IsTrue(string id)
         {
             return (page, _) =>
             {
@@ -89,7 +89,7 @@ namespace FDB.Components.Settings
             };
         }
 
-        private static SettingsKey.DisplayPredecateDelegate IsTrue(string id)
+        private static SettingsKey.DisplayPredecateDelegate IsFalse(string id)
         {
             return (page, _) =>
             {

@@ -75,33 +75,12 @@ namespace FDB.Components.Settings
             Page.NotifyKeyChanged(key);
         }
 
-        internal void Load(ISettingsReader reader)
+        internal void NotifySave()
         {
+            IsChanged = false;
             foreach (var key in Keys)
             {
-                if (key.Type != KeyType.Key)
-                {
-                    continue;
-                }
-                if (reader.Read(key, out var str))
-                {
-                    key.Load(str);
-                } else
-                {
-                    key.Reset();
-                }
-            }
-        }
-
-        internal void Save(ISettingsWriter writer)
-        {
-            foreach (var key in Keys)
-            {
-                if (key.Type != KeyType.Key)
-                {
-                    continue;
-                }
-                writer.Write(key);
+                key.NotifySave();
             }
         }
 

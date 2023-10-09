@@ -1,7 +1,10 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using UnityEngine;
 using static FDB.Components.Settings.SettingsController;
 
@@ -51,7 +54,14 @@ namespace FDB.Components.Settings
         }
 
         public string StringValue { get; private set; }
-        internal void UpdateStringValue(string value) => StringValue = value;
+        internal void UpdateStringValue() {
+            var json = ToJsonString();
+            if (json.Length >= 2 && json.StartsWith('"') && json.EndsWith('"')) {
+                StringValue = json.Substring(1, json.Length - 2);
+            } else {
+                StringValue = json;
+            }
+        }
 
         public bool IsChanged { get; private set; }
         public event Action<SettingsKey> OnKeyChanged;
@@ -100,13 +110,20 @@ namespace FDB.Components.Settings
             Group.NotifyKeyChanged(this);
         }
 
+        internal void NotifySave()
+        {
+            IsChanged = false;
+        }
+
         internal virtual void Setup()
         {
             UpdateDisplayState(Group);
         }
 
+        internal abstract string ToJsonString();
         internal abstract void LoadDefault();
-        internal abstract void Load(string str);
+        internal abstract void Load(JsonTextReader reader);
+        internal abstract void Save(JsonTextWriter writer);
 
         internal protected void Apply()
         {
@@ -182,7 +199,7 @@ namespace FDB.Components.Settings
                     throw new ArgumentException($"Invalid value \"{value}\" for key {Id}");
                 }
                 _value = value;
-                UpdateStringValue(ValueToString(value));
+                UpdateStringValue();
                 NotifyKeyChanged();
             }
         }
@@ -197,17 +214,22 @@ namespace FDB.Components.Settings
             ResetValue();
         }
 
-        internal sealed override void Load(string str)
+        internal sealed override void Load(JsonTextReader reader)
         {
-            var value = ValueFromString(str);
+            var value = ValueFromJson(reader);
             ValidateValue(ref value);
             _value = value;
-            UpdateStringValue(ValueToString(value));
+            UpdateStringValue();
+        }
+
+        internal override void Save(JsonTextWriter writer)
+        {
+            ValueToJson(writer, Value);
         }
 
         internal sealed override void LoadDefault()
         {
-            Value = ReadValue(SettingsController.DefaultKeys.Read(this));
+            Value = ReadValue(DefaultKeys.Read(this));
         }
 
         protected sealed override void ApplyValue()
@@ -220,13 +242,28 @@ namespace FDB.Components.Settings
             var value = ReadValue(KeyField.GetValue(null));
             ValidateValue(ref value);
             _value = ReadValue(value);
-            UpdateStringValue(ValueToString(_value));
+            UpdateStringValue();
+        }
+
+        private readonly StringBuilder sb = new StringBuilder();
+
+        internal sealed override string ToJsonString()
+        {
+            sb.Clear();
+            using (var stringWriter = new StringWriter(sb))
+            {
+                using (var writer = new JsonTextWriter(stringWriter))
+                {
+                    ValueToJson(writer, Value);
+                    return sb.ToString();
+                }
+            }
         }
 
         protected abstract bool ValidateValue(ref TValue value);
         protected abstract TValue ReadValue(object value);
         protected abstract object WriteValue(TValue value);
-        protected abstract string ValueToString(TValue value);
-        protected abstract TValue ValueFromString(string value);
+        protected abstract void ValueToJson(JsonTextWriter writer, TValue value);
+        protected abstract TValue ValueFromJson(JsonTextReader reader);
     }
 }

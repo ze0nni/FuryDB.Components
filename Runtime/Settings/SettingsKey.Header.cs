@@ -1,4 +1,5 @@
 using System.Reflection;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace FDB.Components.Settings
@@ -22,14 +23,24 @@ namespace FDB.Components.Settings
                 
             }
 
-            internal override void Load(string str)
+            internal override void Load(JsonTextReader reader)
             {
-                
+                throw new System.NotImplementedException();
+            }
+
+            internal override void Save(JsonTextWriter writer)
+            {
+                throw new System.NotImplementedException();
             }
 
             internal override void LoadDefault()
             {
                 
+            }
+
+            internal override string ToJsonString()
+            {
+                throw new System.NotImplementedException();
             }
         }
     }

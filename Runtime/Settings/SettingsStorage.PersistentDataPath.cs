@@ -20,118 +20,86 @@ namespace FDB.Components.Settings
             private string GetPath(string userId)
             {
                 return Path.Combine(
-                    Application.persistentDataPath, 
+                    Application.persistentDataPath,
                     string.Format(_fileName, userId));
             }
 
-            public IDisposable Read(string userId, out ISettingsReader reader)
+            public void Load(string userId, IReadOnlyDictionary<string, SettingsKey> keys)
             {
-                reader = new Reader(GetPath(userId));
-                return (Reader)reader;
-            }
-
-            public IDisposable Write(string userId, out ISettingsWriter writer)
-            {
-                writer = new Writer(GetPath(userId));
-                return (Writer)writer;
-            }
-
-            internal sealed class Reader: ISettingsReader, IDisposable
-            {
-                private readonly string _path;
-                private readonly Dictionary<string, string> _keyValue = new Dictionary<string, string>();
-
-                public Reader(string path)
+                var path = GetPath(userId);
+                if (!File.Exists(path))
                 {
-                    _path = path;
-                    if (!File.Exists(_path))
+                    return;
+                }
+                using (var streamReader = new StreamReader(path))
+                {
+                    using (var reader = new JsonTextReader(streamReader))
                     {
-                        return;
-                    }
-                    using (var textReader = new StreamReader(_path))
-                    {
-                        using (var reader = new JsonTextReader(textReader))
+                        while (reader.Read())
                         {
-                            while (reader.Read())
+                            switch (reader.TokenType)
                             {
-                                switch (reader.TokenType)
-                                {
-                                    case JsonToken.Comment:
-                                        break;
-                                    case JsonToken.StartObject:
-                                        ReadSettingsBody(reader);
-                                        break;
-                                    default:
-                                        throw new ArgumentException($"Unexcepted token {reader.TokenType}");
-                                }
+                                case JsonToken.Comment:
+                                    continue;
+                                case JsonToken.StartObject:
+                                    LoadKeys(reader);
+                                    break;
+                                default:
+                                    throw new ArgumentException($"Unexcepted token type {reader.TokenType}");
                             }
                         }
                     }
                 }
 
-                private void ReadSettingsBody(JsonTextReader reader)
+                void LoadKeys(JsonTextReader reader)
                 {
                     while (reader.Read())
                     {
                         switch (reader.TokenType)
                         {
+                            case JsonToken.Comment:
+                                continue;
+                            case JsonToken.PropertyName:
+                                var id = (string)reader.Value;
+                                reader.Read();
+                                LoadKey(id, reader);
+                                break;
                             case JsonToken.EndObject:
                                 return;
-                            case JsonToken.Comment:
-                                break;
-                            case JsonToken.PropertyName:
-                                var key = (string)reader.Value;
-                                reader.Read();
-                                var value = (string)reader.Value;
-                                _keyValue[key] = value;
-                                break;
                             default:
-                                throw new ArgumentException($"Unexcepted token {reader.TokenType}");
+                                throw new ArgumentException($"Unexcepted token type {reader.TokenType}");
                         }
                     }
                 }
 
-                public bool Read(SettingsKey key, out string value)
+                void LoadKey(string id, JsonTextReader reader)
                 {
-                    return _keyValue.TryGetValue(key.Id, out value);
-                }
-                public void Dispose()
-                {
-                    
+                    if (!keys.TryGetValue(id, out var key))
+                    {
+                        reader.Skip();
+                    } else
+                    {
+                        key.Load(reader);
+                    }
                 }
             }
 
-            internal sealed class Writer : ISettingsWriter, IDisposable
+            public void Save(string userId, IReadOnlyList<SettingsKey> keys)
             {
-                private readonly string _path;
-                private readonly TextWriter _textwriter;
-                private readonly JsonTextWriter _jsonWriter;
-
-                public Writer(string path)
+                using (var streamWriter = new StreamWriter(GetPath(userId)))
                 {
-                    _path = path;
-                    Directory.CreateDirectory(Path.GetDirectoryName(_path));
+                    using (var writer = new JsonTextWriter(streamWriter))
+                    {
+                        writer.Formatting = Formatting.Indented;
 
-                    _textwriter = new StreamWriter(_path);
-                    _jsonWriter = new JsonTextWriter(_textwriter);
-                    _jsonWriter.Formatting = Formatting.Indented;
-
-                    _jsonWriter.WriteStartObject();
-                }
-
-                public void Write(SettingsKey key)
-                {
-                    _jsonWriter.WritePropertyName(key.Id);
-                    _jsonWriter.WriteValue(key.StringValue);
-                }
-
-                public void Dispose()
-                {
-                    _jsonWriter.WriteEndObject();
-
-                    _jsonWriter.Close();
-                    _textwriter.Close();
-                    _textwriter.Dispose();
+                        writer.WriteStartObject();
+                        foreach (var key in keys)
+                        {
+                            writer.WritePropertyName(key.Id);
+                            key.Save(writer);
+                        }
+                        writer.WriteEndObject();
+                    }
                 }
             }
         }

@@ -1,36 +1,19 @@
-using System;
+using System.Collections.Generic;
 
 namespace FDB.Components.Settings
 {
     internal static partial class SettingsStorage
     {
-        internal sealed class Null : ISettingsStorage, ISettingsReader, ISettingsWriter, IDisposable
+        internal sealed class Null : ISettingsStorage
         {
-            IDisposable ISettingsStorage.Read(string userId, out ISettingsReader reader)
+            public void Load(string userId, IReadOnlyDictionary<string, SettingsKey> keys)
             {
-                reader = this;
-                return this;
+                
             }
 
-            IDisposable ISettingsStorage.Write(string userId, out ISettingsWriter writer)
+            public void Save(string userId, IReadOnlyList<SettingsKey> keys)
             {
-                writer = this;
-                return this;
-            }
-
-            bool ISettingsReader.Read(SettingsKey key, out string value)
-            {
-                value = null;
-                return false;
-            }
-
-            void ISettingsWriter.Write(SettingsKey key)
-            {
-
-            }
-
-            void IDisposable.Dispose()
-            {
+                
             }
         }
     }

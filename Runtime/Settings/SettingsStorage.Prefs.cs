@@ -1,4 +1,7 @@
-using System;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using UnityEngine;
 
 namespace FDB.Components.Settings
@@ -7,66 +10,40 @@ namespace FDB.Components.Settings
     {
         internal sealed class Prefs : ISettingsStorage
         {
-            public IDisposable Read(string userId, out ISettingsReader reader)
-            {
-                reader = new Reader(userId);
-                return (Reader)reader;
-            }
+            private static string PrefsKey(string userId, SettingsKey key) => $"{userId}.{key.Id}";
 
-            public IDisposable Write(string userId, out ISettingsWriter writer)
+            public void Load(string userId, IReadOnlyDictionary<string, SettingsKey> keys)
             {
-                writer = new Writer(userId);
-                return (Writer)writer;
-            }
-
-            private class Reader : ISettingsReader, IDisposable
-            {
-                readonly string _userId;
-                bool _disposed;
-                public Reader(string userId) => _userId = userId;
-
-                public bool Read(SettingsKey key, out string value)
+                foreach (var (_, key) in keys)
                 {
-                    if (_disposed)
+                    var prefsKey = PrefsKey(userId, key);
+                    if (PlayerPrefs.HasKey(prefsKey))
                     {
-                        throw new ArgumentNullException($"{GetType().FullName} disposed");
+                        var rawJson = PlayerPrefs.GetString(prefsKey);
+                        var bytes = Encoding.UTF8.GetBytes(rawJson);
+                        using (var memoryStream = new MemoryStream(bytes.Length))
+                        {
+                            memoryStream.Write(bytes);
+                            memoryStream.Position = 0;
+                            using (var streamReader = new StreamReader(memoryStream))
+                            {
+                                using (var reader = new JsonTextReader(streamReader))
+                                {
+                                    reader.Read();
+                                    key.Load(reader);
+                                }
+                            }
+                        }
                     }
-                    value = null;
-                    var k = key.KeyOf(_userId);
-                    if (PlayerPrefs.HasKey(k))
-                    {
-                        value = PlayerPrefs.GetString(k);
-                    }
-                    return value != null;
-                }
-
-                public void Dispose()
-                {
-                    _disposed = true;
                 }
             }
 
-            private class Writer : ISettingsWriter, IDisposable
+            public void Save(string userId, IReadOnlyList<SettingsKey> keys)
             {
-                readonly string _userId;
-                bool _disposed;
-                public Writer(string userId) => _userId = userId;
-
-                public void Write(SettingsKey key)
+                foreach (var key in keys)
                 {
-                    if (_disposed)
-                    {
-                        throw new ArgumentNullException($"{GetType().FullName} disposed");
-                    }
-                    PlayerPrefs.SetString(key.KeyOf(_userId), key.StringValue);
+                    PlayerPrefs.SetString(PrefsKey(userId, key), key.ToJsonString());
                 }
-
-                public void Dispose()
-                {
-                    _disposed = true;
-                    PlayerPrefs.Save();
-                }
-
             }
         }
     }

@@ -119,7 +119,7 @@ namespace FDB.Components.Settings
                 GUI.enabled = true;
                 if (GUILayout.Button("Default"))
                 {
-                    _page.LoadDefault();
+                    _page.ResetDefault();
                 }
                 if (GUILayout.Button("Close"))
                 {

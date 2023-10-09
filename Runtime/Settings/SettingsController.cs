@@ -118,7 +118,7 @@ namespace FDB.Components.Settings
         {
             UserId = userId ?? throw new ArgumentNullException(nameof(userId));
             HashedUserId = _hash == null ? userId : _hash.Hash(_hashSalt + userId);
-            _innserPage.LoadDefault();
+            _innserPage.ResetDefault();
             _innserPage.Apply(false);
             Load();
             OnUserChanged?.Invoke();
@@ -126,17 +126,14 @@ namespace FDB.Components.Settings
 
         public void Load()
         {
-            _innserPage.Reset();
-            using (_storage.Read(HashedUserId, out var reader))
-            {
-                _innserPage.Load(reader);
-            }
+            _innserPage.ResetDefault();
+            _storage.Load(HashedUserId, _innserPage.KeysToLoad);
             _innserPage.Apply(false);
         }
 
         public void LoadDefault()
         {
-            _innserPage.LoadDefault();
+            _innserPage.ResetDefault();
             _innserPage.Apply(false);
         }
 
@@ -148,10 +145,8 @@ namespace FDB.Components.Settings
 
         internal void Save(SettingsPage page)
         {
-            using (_storage.Write(HashedUserId, out var writer))
-            {
-                page.Save(writer);
-            }
+            _storage.Save(HashedUserId, page.KeysToSave);
+            page.NotifySave();
         }
 
         public override string ToString()

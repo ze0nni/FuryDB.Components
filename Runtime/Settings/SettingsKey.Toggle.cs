@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using System;
 using System.Reflection;
 using UnityEngine;
@@ -81,15 +82,26 @@ namespace FDB.Components.Settings
                 return value;
             }
 
-            protected override bool ValueFromString(string value)
+            protected override bool ValueFromJson(JsonTextReader reader)
             {
-                bool.TryParse(value, out var b);
-                return b;
+                switch (reader.TokenType)
+                {
+                    case JsonToken.Boolean:
+                    case JsonToken.String:
+                        if (bool.TryParse(reader.Value.ToString(), out var b))
+                            return b;
+                        break;
+                    default:
+                        reader.Skip();
+                        break;
+                }
+                Debug.LogWarning($"Return default value for key {Id}");
+                return (bool)SettingsController.DefaultKeys.Read(this);
             }
 
-            protected override string ValueToString(bool value)
+            protected override void ValueToJson(JsonTextWriter writer, bool value)
             {
-                return value.ToString();
+                writer.WriteValue(value);
             }
 
             protected internal override void OnFieldLayout()

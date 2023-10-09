@@ -163,13 +163,13 @@ namespace FDB.Components.Settings
            Data = Group.Page.Controller.CreateKeyData<TKeyData>(this);
         }
 
-        protected internal virtual void OnGUILayout()
+        protected internal virtual void OnGUILayout(float containerWidth)
         {
-            GUILayout.Label(Data.Name);
-            OnFieldLayout();
+            GUILayout.Label(Data.Name, GUILayout.Width(containerWidth / 3));
+            OnFieldLayout(containerWidth - containerWidth / 3);
         }
 
-        protected internal virtual void OnFieldLayout()
+        protected internal virtual void OnFieldLayout(float containerWidth)
         {
 
         }

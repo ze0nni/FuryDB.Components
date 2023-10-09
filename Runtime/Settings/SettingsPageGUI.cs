@@ -40,7 +40,7 @@ namespace FDB.Components.Settings
                     height - (height / 4))))
             {
                 OnGroupsGUILayout();
-                OnGroupKeysGUILayout(SelectedGroup);
+                OnGroupKeysGUILayout(SelectedGroup, width / 2);
                 OnPageActionsGUILayout();
             }
         }
@@ -48,7 +48,7 @@ namespace FDB.Components.Settings
         public void OnInspectorGUILayout()
         {
             OnGroupsGUILayout();
-            OnGroupKeysGUILayout(SelectedGroup);
+            OnGroupKeysGUILayout(SelectedGroup, Screen.width);
             OnPageActionsGUILayout();
         }
 
@@ -68,7 +68,7 @@ namespace FDB.Components.Settings
             }
         }
 
-        private void OnGroupKeysGUILayout(SettingsGroup<TKeysData> group)
+        private void OnGroupKeysGUILayout(SettingsGroup<TKeysData> group, float width)
         {
             using (var scrollView = new GUILayout.ScrollViewScope(_scrollPosition, GUILayout.ExpandHeight(true)))
             {
@@ -92,7 +92,7 @@ namespace FDB.Components.Settings
                     {
                         using (new GUILayout.HorizontalScope())
                         {
-                            key.OnGUILayout();
+                            key.OnGUILayout(width);
                         }
                     }
                 }

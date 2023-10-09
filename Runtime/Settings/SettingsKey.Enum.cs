@@ -118,7 +118,7 @@ namespace FDB.Components.Settings
                 writer.WriteValue(value);
             }
 
-            protected internal override void OnFieldLayout()
+            protected internal override void OnFieldLayout(float containerWidth)
             {
                 ValueIndex = GUILayout.Toolbar(ValueIndex, _optionsGUINames);
             }

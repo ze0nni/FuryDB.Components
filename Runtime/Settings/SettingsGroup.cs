@@ -128,7 +128,7 @@ namespace FDB.Components.Settings
             foreach (var field in GroupType.GetFields())
             {
                 var key = Page.Controller.CreateKey(this, field, out var headerKey);
-                if (field == null)
+                if (key == null)
                 {
                     continue;
                 }

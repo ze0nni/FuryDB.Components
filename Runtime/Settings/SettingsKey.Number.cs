@@ -125,26 +125,39 @@ namespace FDB.Components.Settings
                 }
             }
 
-            protected internal override void OnFieldLayout()
+            protected internal override void OnFieldLayout(float containerWidth)
             {
-                var newValue = GUILayout.TextField(StringValue);
-                if (float.TryParse(newValue, out var n))
+                if (Min == null && Max == null)
                 {
-                    if (n != Value)
+                    var newValue = GUILayout.TextField(StringValue);
+                    if (float.TryParse(newValue, out var n))
                     {
-                        Value = n;
+                        if (n != Value)
+                        {
+                            Value = n;
+                        }
+                    }
+                    else
+                    {
+                        Value = 0;
+                    }
+                    if (GUILayout.Button("-", GUILayout.Width(42)))
+                    {
+                        Value -= 1;
+                    }
+                    if (GUILayout.Button("+", GUILayout.Width(42)))
+                    {
+                        Value += 1;
                     }
                 } else
                 {
-                    Value = 0;
-                }
-                if (GUILayout.Button("-", GUILayout.Width(42)))
-                {
-                    Value -= 1;
-                }
-                if (GUILayout.Button("+", GUILayout.Width(42)))
-                {
-                    Value += 1;
+                    GUILayout.Label(StringValue, GUILayout.Width(48));
+                    var newValue = GUILayout.HorizontalSlider(Value, Min.Value, Max.Value);
+                    GUILayout.Label($"{Min.Value}...{Max.Value}", GUILayout.ExpandWidth(false));
+                    if (newValue != Value)
+                    {
+                        Value = newValue;
+                    }
                 }
             }
         }

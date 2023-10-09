@@ -12,6 +12,7 @@ namespace FDB.Components.Settings
         public IReadOnlyList<SettingsGroup> Groups { get; private set; }
 
         public bool IsChanged { get; private set; }
+        public event Action<SettingsKey> OnKeyChanged;
 
         internal SettingsPage(SettingsController controller)
         {
@@ -24,12 +25,13 @@ namespace FDB.Components.Settings
             Groups = groups.ToArray();
         }
 
-        internal void OnKeyChanged(SettingsKey key)
+        internal void NotifyKeyChanged(SettingsKey key)
         {
             IsChanged = true;
-        }
+            OnKeyChanged?.Invoke(key);
+    }
 
-        public void LoadDefault()
+    public void LoadDefault()
         {
             foreach (var group in Groups)
             {

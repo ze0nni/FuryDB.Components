@@ -29,10 +29,14 @@ namespace FDB.Components.Settings
         public readonly HeaderAttribute HeaderAttr;
         public readonly IReadOnlyList<Attribute> HeaderAttributes;
 
+        public bool Enabled { get; private set; }
+        public bool Visible { get; private set; }
+
         public string StringValue { get; private set; }
         internal void UpdateStringValue(string value) => StringValue = value;
 
         public bool IsChanged { get; private set; }
+        public event Action<SettingsKey> OnKeyChanged;
 
         internal SettingsKey(SettingsGroup group, FieldInfo keyField)
         {
@@ -57,10 +61,11 @@ namespace FDB.Components.Settings
             HeaderAttr = header;
         }
 
-        protected void OnKeyChanged()
+        protected void NotifyKeyChanged()
         {
             IsChanged = true;
-            Group.OnKeyChanged(this);
+            OnKeyChanged?.Invoke(this);
+            Group.NotifyKeyChanged(this);
         }
 
         internal virtual void Setup()
@@ -145,7 +150,7 @@ namespace FDB.Components.Settings
                 }
                 _value = value;
                 UpdateStringValue(ValueToString(value));
-                OnKeyChanged();
+                NotifyKeyChanged();
             }
         }
 

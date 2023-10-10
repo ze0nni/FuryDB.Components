@@ -8,6 +8,8 @@ namespace FDB.Components.Settings
     public abstract class SettingsPage
     {
         public readonly string Name;
+        public readonly bool Primary;
+        readonly Dictionary<Type, SettingsPage> _primaryMap = new Dictionary<Type, SettingsPage>();
         public readonly SettingsController Controller;
         public readonly Registry Registrty = new Registry();
         public IReadOnlyList<SettingsGroup> Groups { get; private set; }
@@ -40,10 +42,18 @@ namespace FDB.Components.Settings
             .Where(k => k.Type == KeyType.Key).
             ToArray();
 
-        internal SettingsPage(SettingsController controller)
+        internal SettingsPage(
+            bool primary,
+            SettingsController controller)
         {
             Name = controller.SettingsType.Name;
+            Primary = primary;
             Controller = controller;
+
+            if (primary)
+            {
+                _primaryMap.Add(GetType(), this);
+            }
         }
 
         protected void SetGroups(IEnumerable<SettingsGroup> groups)
@@ -107,7 +117,7 @@ namespace FDB.Components.Settings
     {
         public new IReadOnlyList<SettingsGroup<TKeyData>> Groups { get; private set; }
 
-        internal SettingsPage(SettingsController controller) : base(controller) {
+        internal SettingsPage(bool primary, SettingsController controller) : base(primary, controller) {
         }
 
         internal void Setup()

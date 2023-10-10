@@ -14,7 +14,7 @@ namespace FDB.Components.Settings
         private readonly ISettingsHash _hash;
         private readonly string _hashSalt;
         private readonly Action _onChangedCallback;
-        private readonly SettingsPage<VoidSettingsKeyData> _innserPage;
+        private readonly SettingsPage<VoidSettingsKeyData> _primaryPage;
 
         public string UserId { get; private set; } = "";
         public string HashedUserId { get; private set; } = "";
@@ -44,7 +44,8 @@ namespace FDB.Components.Settings
             _storage = storage;
             _hash = hash;
             _onChangedCallback = OnApplySettingsAttribute.ResolveCallback(settingsType);
-            _innserPage = CreatePage<VoidSettingsKeyData>();
+            _primaryPage = new SettingsPage<VoidSettingsKeyData>(true, this);
+            _primaryPage.Setup();
             if (userId != null)
             {
                 SetUsetId(userId);
@@ -58,7 +59,7 @@ namespace FDB.Components.Settings
             {
                 throw new ArgumentNullException($"Call {nameof(SettingsController)}.{nameof(SetUsetId)}() before use settings");
             }
-            var page = new SettingsPage<TKeyData>(this);
+            var page = new SettingsPage<TKeyData>(false, this);
             page.Setup();
             return page;
         }
@@ -119,29 +120,29 @@ namespace FDB.Components.Settings
         {
             UserId = userId ?? throw new ArgumentNullException(nameof(userId));
             HashedUserId = _hash == null ? userId : _hash.Hash(_hashSalt + userId);
-            _innserPage.ResetDefault();
-            _innserPage.Apply(false);
+            _primaryPage.ResetDefault();
+            _primaryPage.Apply(false);
             Load();
             OnUserChanged?.Invoke();
         }
 
         public void Load()
         {
-            _innserPage.ResetDefault();
-            _storage.Load(HashedUserId, _innserPage.KeysToLoad);
-            _innserPage.Apply(false);
+            _primaryPage.ResetDefault();
+            _storage.Load(HashedUserId, _primaryPage.KeysToLoad);
+            _primaryPage.Apply(false);
         }
 
         public void LoadDefault()
         {
-            _innserPage.ResetDefault();
-            _innserPage.Apply(false);
+            _primaryPage.ResetDefault();
+            _primaryPage.Apply(false);
         }
 
         public void Save()
         {
-            _innserPage.Reset();
-            Save(_innserPage);
+            _primaryPage.Reset();
+            Save(_primaryPage);
         }
 
         internal void Save(SettingsPage page)

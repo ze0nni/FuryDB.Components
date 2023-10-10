@@ -128,7 +128,7 @@ namespace FDB.Components.Settings
                 }
             }
 
-            protected internal override void OnFieldLayout(float containerWidth)
+            protected internal override void OnFieldLayout(GUIMode mode, float containerWidth)
             {
                 if (Min == null && Max == null)
                 {

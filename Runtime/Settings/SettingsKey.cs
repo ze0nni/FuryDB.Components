@@ -36,6 +36,12 @@ namespace FDB.Components.Settings
         Header
     }
 
+    public enum GUIMode
+    {
+        Editor,
+        Screen
+    }
+
     public abstract partial class SettingsKey
     {
         public readonly string KeyName;
@@ -177,13 +183,13 @@ namespace FDB.Components.Settings
            Data = Group.Page.Controller.CreateKeyData<TKeyData>(this);
         }
 
-        protected internal virtual void OnGUILayout(float containerWidth)
+        protected internal virtual void OnGUILayout(GUIMode mode, float containerWidth)
         {
             GUILayout.Label(Data.Name, GUILayout.Width(containerWidth / 3));
-            OnFieldLayout(containerWidth - containerWidth / 3);
+            OnFieldLayout(mode, containerWidth - containerWidth / 3);
         }
 
-        protected internal virtual void OnFieldLayout(float containerWidth)
+        protected internal virtual void OnFieldLayout(GUIMode mode, float containerWidth)
         {
 
         }

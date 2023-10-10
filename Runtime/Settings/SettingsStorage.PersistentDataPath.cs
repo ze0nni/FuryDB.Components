@@ -79,7 +79,27 @@ namespace FDB.Components.Settings
                         reader.Skip();
                     } else
                     {
-                        key.Load(reader);
+                        var startDepth = reader.Depth;
+                        try
+                        {
+                            key.Load(reader);
+                        } catch (Exception exc)
+                        {
+                            Debug.LogError($"Exception when read key {key.Id}");
+                            Debug.LogException(exc);
+                        }
+                        switch (reader.TokenType)
+                        {
+                            case JsonToken.StartArray:
+                            case JsonToken.StartObject:
+                            case JsonToken.StartConstructor:
+                                reader.Read();
+                                break;
+                        }
+                        while(reader.Depth > startDepth)
+                        {
+                            reader.Read();
+                        }
                     }
                 }
             }

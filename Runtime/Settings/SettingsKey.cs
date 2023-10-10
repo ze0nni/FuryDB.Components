@@ -183,13 +183,13 @@ namespace FDB.Components.Settings
            Data = Group.Page.Controller.CreateKeyData<TKeyData>(this);
         }
 
-        protected internal virtual void OnGUILayout(GUIMode mode, float containerWidth)
+        protected internal virtual void OnGUI(GUIMode mode, float containerWidth)
         {
             GUILayout.Label(Data.Name, GUILayout.Width(containerWidth / 3));
-            OnFieldLayout(mode, containerWidth - containerWidth / 3);
+            OnFieldGUI(mode, containerWidth - containerWidth / 3);
         }
 
-        protected internal virtual void OnFieldLayout(GUIMode mode, float containerWidth)
+        protected internal virtual void OnFieldGUI(GUIMode mode, float containerWidth)
         {
 
         }
@@ -218,6 +218,7 @@ namespace FDB.Components.Settings
                 {
                     throw new ArgumentException($"Invalid value \"{value}\" for key {Id}");
                 }
+
                 _value = value;
                 UpdateStringValue();
                 NotifyKeyChanged();

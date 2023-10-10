@@ -95,7 +95,7 @@ namespace FDB.Components.Settings
                     {
                         using (new GUILayout.HorizontalScope())
                         {
-                            key.OnGUILayout(mode, width);
+                            key.OnGUI(mode, width);
                         }
                     }
                 }

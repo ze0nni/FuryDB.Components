@@ -11,7 +11,10 @@ namespace FDB.Components.Settings
 
         internal class EnumKeyFactory : ISettingsKeyFactory
         {
-            public SettingsKey<TKeyData> Produce<TKeyData>(SettingsGroup<TKeyData> group, FieldInfo keyField)
+            public SettingsKey<TKeyData> Produce<TKeyData>(
+                KeyContext context,
+                SettingsGroup<TKeyData> group,
+                FieldInfo keyField)
                 where TKeyData : ISettingsKeyData
             {
                 if (keyField.FieldType.IsEnum)

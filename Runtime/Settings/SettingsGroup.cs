@@ -11,6 +11,7 @@ namespace FDB.Components.Settings
         public readonly string Name;
         public readonly SettingsPage Page;
         public readonly Type GroupType;
+        public readonly Registry Registry = new Registry();
 
         private bool _isDirtyKeys;
         internal void MarkKeysDirty() => _isDirtyKeys = true;
@@ -124,10 +125,11 @@ namespace FDB.Components.Settings
 
         internal void Setup()
         {
+            var context = new KeyContext(Page.Registrty, Registry);
             var keys = new List<SettingsKey<TKeyData>>();
             foreach (var field in GroupType.GetFields())
             {
-                var key = Page.Controller.CreateKey(this, field, out var headerKey);
+                var key = Page.Controller.CreateKey(context, this, field, out var headerKey);
                 if (key == null)
                 {
                     continue;

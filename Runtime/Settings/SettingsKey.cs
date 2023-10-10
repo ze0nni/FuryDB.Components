@@ -10,9 +10,23 @@ using static FDB.Components.Settings.SettingsController;
 
 namespace FDB.Components.Settings
 {
+    public sealed class KeyContext
+    {
+        public readonly IRegistry Global;
+        public readonly IRegistry Local;
+        internal KeyContext(IRegistry global, IRegistry local)
+        {
+            Global = global;
+            Local = local;
+        }
+    }
+
     public interface ISettingsKeyFactory
     {
-        SettingsKey<TKeyData> Produce<TKeyData>(SettingsGroup<TKeyData> group, FieldInfo keyField)
+        SettingsKey<TKeyData> Produce<TKeyData>(
+            KeyContext context,
+            SettingsGroup<TKeyData> group,
+            FieldInfo keyField)
             where TKeyData : ISettingsKeyData;
     }
 

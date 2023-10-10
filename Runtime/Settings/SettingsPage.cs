@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
 namespace FDB.Components.Settings
 {
@@ -10,6 +9,7 @@ namespace FDB.Components.Settings
     {
         public readonly string Name;
         public readonly SettingsController Controller;
+        public readonly Registry Registrty = new Registry();
         public IReadOnlyList<SettingsGroup> Groups { get; private set; }
 
         internal readonly Dictionary<string, SettingsKey> _keysMap = new Dictionary<string, SettingsKey>();

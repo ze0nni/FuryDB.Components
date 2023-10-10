@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
@@ -19,29 +20,60 @@ namespace FDB.Components.Settings
 
         internal class ToggleFactory : ISettingsKeyFactory
         {
-            public SettingsKey<TKeyData> Produce<TKeyData>(SettingsGroup<TKeyData> group, FieldInfo keyField) where TKeyData : ISettingsKeyData
+            public SettingsKey<TKeyData> Produce<TKeyData>(
+                KeyContext context,
+                SettingsGroup<TKeyData> group,
+                FieldInfo keyField) where TKeyData : ISettingsKeyData
             {
                 if (keyField.FieldType != typeof(bool))
                 {
                     return null;
                 }
                 var groupAttr = keyField.GetCustomAttribute<ToggleGroupAttribute>();
-                return new ToggleKey<TKeyData>(group, keyField, groupAttr?.GroupName);
+                var toggleGroup = groupAttr?.GroupName == null
+                    ? null
+                    : context.Local.GetOrCreate<ToggleGroup<TKeyData>>(
+                        groupAttr.GroupName, 
+                        () => new ToggleGroup<TKeyData>(groupAttr?.GroupName));
+
+                return new ToggleKey<TKeyData>(group, keyField, toggleGroup);
+            }
+        }
+
+        public sealed class ToggleGroup<TKeyData>
+            where TKeyData : ISettingsKeyData
+        {
+            public readonly string Name;
+            internal ToggleGroup(string name)
+            {
+                Name = name;
+            }
+
+            readonly List<ToggleKey<TKeyData>> _list = new List<ToggleKey<TKeyData>>();
+            public IReadOnlyCollection<ToggleKey<TKeyData>> List => _list;
+
+            internal void Add(ToggleKey<TKeyData> toggle)
+            {
+                _list.Add(toggle);
             }
         }
 
         public sealed class ToggleKey<TKeyData> : SettingsKey<bool, TKeyData>
             where TKeyData : ISettingsKeyData
         {
-            public readonly string ToggleGroup;
+            public readonly ToggleGroup<TKeyData> ToggleGroup;
 
             public ToggleKey(
                 SettingsGroup<TKeyData> group,
                 FieldInfo keyField,
-                string toggleGroup
+                ToggleGroup<TKeyData> toggleGroup
                 ) : base(group, keyField)
             {
                 ToggleGroup = toggleGroup;
+                if (toggleGroup != null)
+                {
+                    toggleGroup.Add(this);
+                }
             }
 
             protected override void NotifyKeyChanged()
@@ -52,13 +84,11 @@ namespace FDB.Components.Settings
                 {
                     return;
                 }
-                foreach (var key in Group.Keys)
+                foreach (var toggle in ToggleGroup.List)
                 {
-                    if (key != this
-                        && key is ToggleKey<TKeyData> toggleKey
-                        && toggleKey.ToggleGroup == ToggleGroup)
+                    if (toggle != this)
                     {
-                        toggleKey.Value = false;
+                        toggle.Value = false;
                     }
                 }
             }

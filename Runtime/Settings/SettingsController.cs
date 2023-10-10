@@ -64,6 +64,7 @@ namespace FDB.Components.Settings
         }
 
         internal SettingsKey<TKeyData> CreateKey<TKeyData>(
+            KeyContext context,
             SettingsGroup<TKeyData> group, 
             FieldInfo keyField,
             out SettingsKey<TKeyData> headerKey)
@@ -73,7 +74,7 @@ namespace FDB.Components.Settings
             headerKey = null;
             foreach (var factory in _factories)
             {
-                var key = factory.Produce<TKeyData>(group, keyField);
+                var key = factory.Produce<TKeyData>(context, group, keyField);
                 if (key != null)
                 {
                     result = key;

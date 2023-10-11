@@ -23,7 +23,7 @@ namespace FDB.Components.Settings
 
         public event Action OnUserChanged;
 
-        public SettingsController(
+        internal SettingsController(
             string userId,
             Type settingsType,
             ISettingsStorage storage,
@@ -52,7 +52,12 @@ namespace FDB.Components.Settings
             }
         }
 
-        public SettingsPage<TKeyData> CreatePage<TKeyData>()
+        public SettingsPage<VoidSettingsKeyData> NewPage()
+        {
+            return NewPage<VoidSettingsKeyData>();
+        }
+
+        public SettingsPage<TKeyData> NewPage<TKeyData>()
             where TKeyData : ISettingsKeyData
         {
             if (UserId == null)

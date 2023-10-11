@@ -36,12 +36,6 @@ namespace FDB.Components.Settings
         Header
     }
 
-    public enum GUIMode
-    {
-        Editor,
-        Screen
-    }
-
     public abstract partial class SettingsKey
     {
         public readonly string KeyName;
@@ -183,13 +177,30 @@ namespace FDB.Components.Settings
            Data = Group.Page.Controller.CreateKeyData<TKeyData>(this);
         }
 
-        protected internal virtual void OnGUI(GUIMode mode, float containerWidth)
+        (Rect label, Rect field) _guiRects;
+        protected (Rect label, Rect field) GuiRects => _guiRects;
+
+        protected internal virtual void OnGUI(ISettingsGUIState state, float containerWidth)
         {
-            GUILayout.Label(Data.Name, GUILayout.Width(containerWidth / 3));
-            OnFieldGUI(mode, containerWidth - containerWidth / 3);
+            GUILayout.Label(Data.Name, GUILayout.Width(state.Width / 2));
+
+            Rect labelRect = default;
+            if (Event.current.type == EventType.Repaint)
+            {
+                labelRect = GUILayoutUtility.GetLastRect();
+            }
+            using (new GUILayout.HorizontalScope())
+            {
+                OnFieldGUI(state, containerWidth - state.Width / 3);
+            }
+            if (Event.current.type == EventType.Repaint)
+            {
+                var fieldRect = GUILayoutUtility.GetLastRect();
+                _guiRects = (labelRect, fieldRect);
+            }
         }
 
-        protected internal virtual void OnFieldGUI(GUIMode mode, float containerWidth)
+        protected internal virtual void OnFieldGUI(ISettingsGUIState state, float containerWidth)
         {
 
         }
@@ -238,6 +249,7 @@ namespace FDB.Components.Settings
         internal sealed override void Load(JsonTextReader reader)
         {
             var value = ValueFromJson(reader);
+            value = ReadValue(value);
             ValidateValue(ref value);
             _value = value;
             UpdateStringValue();

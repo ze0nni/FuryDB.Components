@@ -128,7 +128,7 @@ namespace FDB.Components.Settings
                 }
             }
 
-            protected internal override void OnFieldGUI(GUIMode mode, float containerWidth)
+            protected internal override void OnFieldGUI(ISettingsGUIState state, float containerWidth)
             {
                 if (Min == null && Max == null)
                 {

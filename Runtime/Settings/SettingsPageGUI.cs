@@ -4,18 +4,54 @@ using UnityEngine;
 
 namespace FDB.Components.Settings
 {
-    public sealed class SettingsPageGUI<TKeysData>
+    public enum GUIMode
+    {
+        Editor,
+        Screen
+    }
+
+    public interface ISettingsGUIState
+    {
+        GUIMode Mode { get; }
+        float ScreenWidth { get; }
+        float ScreenHeight { get; }
+        float X { get; }
+        float Y { get; }
+        float Width { get; }
+        float Height { get; }
+        void OpenWindow(Rect? fieldRect, GuiWindow window);
+        void CloseWindow();
+    }
+
+    public sealed partial class SettingsPageGUI<TKeysData> : ISettingsGUIState
         where TKeysData : ISettingsKeyData
     {
         private readonly SettingsPage<TKeysData> _page;
         private readonly GUIContent[] _groupNames;
 
+        readonly GUIMode _mode;
+        GUIMode ISettingsGUIState.Mode => _mode;
+        float _screenWidth;
+        float ISettingsGUIState.ScreenWidth => _screenWidth;
+        float _screenHeight;
+        float ISettingsGUIState.ScreenHeight => _screenHeight;
+        float _x;
+        float ISettingsGUIState.X => _x;
+        float _y;
+        float ISettingsGUIState.Y => _y;
+        float _width;
+        float ISettingsGUIState.Width => _width;
+        float _height;
+        float ISettingsGUIState.Height => _height;
+
         public event Action OnCloseClick;
 
         public SettingsPageGUI(
+            GUIMode mode,
             SettingsController controler)
         {
-            _page = controler.CreatePage<TKeysData>();
+            _mode = mode;
+            _page = controler.NewPage<TKeysData>();
             _groupNames = _page.Groups.Select(x => new GUIContent(x.Name)).ToArray();
         }
 
@@ -25,31 +61,53 @@ namespace FDB.Components.Settings
             ? null
             : _page.Groups[_selectedGroup];
 
-        public void OnScreenGUI()
+        public void OnGUI()
         {
-            var width = Screen.width;
-            var height = Screen.height;
-
-            GUI.Box(new Rect(0, 0, width, height), "");
-
-            using (new GUILayout.AreaScope(
-                new Rect(
-                    width / 4,
-                    height / 8,
-                    width / 2,
-                    height - (height / 4))))
+            switch (_mode)
             {
-                OnGroupsGUILayout();
-                OnGroupKeysGUILayout(GUIMode.Screen, SelectedGroup, width / 2);
-                OnPageActionsGUILayout();
+                case GUIMode.Editor:
+                    {
+                        _screenWidth = Screen.width;
+                        _screenHeight = Screen.height;
+                        _x = 0;
+                        _y = 0;
+                        _width = Screen.width;
+                        _height = Screen.height;
+                    }
+                    break;
+                case GUIMode.Screen:
+                    {
+                        _screenWidth = Screen.width;
+                        _screenHeight = Screen.height;
+                        _x = Screen.width / 4;
+                        _y = Screen.height / 8;
+                        _width = Screen.width / 2;
+                        _height = Screen.height - (Screen.height / 4);
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(_mode));
             }
-        }
 
-        public void OnEditorGui()
-        {
+            OnWindowBefore();
+            if (_mode == GUIMode.Screen)
+            {
+                GUILayout.BeginArea(new Rect(
+                        _x,
+                        _y,
+                        _width,
+                        _height));
+            }
+
             OnGroupsGUILayout();
-            OnGroupKeysGUILayout(GUIMode.Editor, SelectedGroup, Screen.width);
+            OnGroupKeysGUILayout(this, SelectedGroup, _width);
             OnPageActionsGUILayout();
+
+            if (_mode == GUIMode.Screen)
+            {
+                GUILayout.EndArea();
+            }
+                OnWindowAfter();
         }
 
         private void OnGroupsGUILayout()
@@ -69,10 +127,12 @@ namespace FDB.Components.Settings
         }
 
         private void OnGroupKeysGUILayout(
-            GUIMode mode,
+            ISettingsGUIState state,
             SettingsGroup<TKeysData> group,
             float width)
         {
+            var enabledRev = GUI.enabled;
+
             using (var scrollView = new GUILayout.ScrollViewScope(_scrollPosition, GUILayout.ExpandHeight(true)))
             {
                 if (group == null)
@@ -86,29 +146,32 @@ namespace FDB.Components.Settings
                     {
                         continue;
                     }
-                    GUI.enabled = key.Enabled;
                     if (key is SettingsKey.Header<TKeysData> headerkey)
                     {
+                        GUI.enabled = enabledRev;
                         GUILayout.Box(headerkey.Data.Name, GUILayout.ExpandWidth(true));
                     }
                     else
                     {
+                        GUI.enabled = enabledRev && key.Enabled;
                         using (new GUILayout.HorizontalScope())
                         {
-                            key.OnGUI(mode, width);
+                            key.OnGUI(state, width);
                         }
                     }
                 }
-                GUI.enabled = true;
                 _scrollPosition = scrollView.scrollPosition;
             }
+
+            GUI.enabled = enabledRev;
         }
 
         private void OnPageActionsGUILayout()
         {
+            var enabledRev = GUI.enabled;
             using (new GUILayout.HorizontalScope())
             {
-                GUI.enabled = _page.IsChanged;
+                GUI.enabled = enabledRev && _page.IsChanged;
                 {
                     if (GUILayout.Button("Apply"))
                     {
@@ -119,7 +182,7 @@ namespace FDB.Components.Settings
                         _page.Reset();
                     }
                 }
-                GUI.enabled = true;
+                GUI.enabled = enabledRev;
                 if (GUILayout.Button("Default"))
                 {
                     _page.ResetDefault();
@@ -129,6 +192,7 @@ namespace FDB.Components.Settings
                     OnCloseClick?.Invoke();
                 }
             }
+            GUI.enabled = enabledRev;
         }
     }
 }

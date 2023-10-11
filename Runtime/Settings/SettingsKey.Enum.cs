@@ -51,7 +51,6 @@ namespace FDB.Components.Settings
 
             public readonly IReadOnlyList<Option> Options;
             private readonly string[] _names;
-            private GUIContent[] _optionsGUINames;
 
             public EnumKey(SettingsGroup<TKeyData> group, FieldInfo keyField) : base(group, keyField)
             {
@@ -69,8 +68,7 @@ namespace FDB.Components.Settings
                                 Group.Page.Controller.CreateKeyData<TKeyData>(field)));
                     }
                 }
-
-                _optionsGUINames = options.Select(o => new GUIContent(o.Data.Name)).ToArray();
+                Options = options;
             }
 
             protected override string ReadValue(object value)
@@ -121,9 +119,23 @@ namespace FDB.Components.Settings
                 writer.WriteValue(value);
             }
 
-            protected internal override void OnFieldGUI(GUIMode mode, float containerWidth)
+            protected internal override void OnFieldGUI(ISettingsGUIState state, float containerWidth)
             {
-                ValueIndex = GUILayout.Toolbar(ValueIndex, _optionsGUINames);
+                if (GUILayout.Button(StringValue))
+                {
+                    state.ShowDropdownWindow(GuiRects.field, () =>
+                    {
+                        foreach (var o in Options)
+                        {
+                            if (GUILayout.Button(o.Data.Name))
+                            {
+                                Value = o.Value;
+                                GUI.changed = true;
+                                state.CloseWindow();
+                            }
+                        }
+                    });
+                }
             }
         }
     }

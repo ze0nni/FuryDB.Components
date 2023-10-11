@@ -134,7 +134,7 @@ namespace FDB.Components.Settings
                 writer.WriteValue(value);
             }
 
-            protected internal override void OnFieldGUI(GUIMode mode, float containerWidth)
+            protected internal override void OnFieldGUI(ISettingsGUIState state, float containerWidth)
             {
                 Value = GUILayout.Toggle(Value, "");
             }

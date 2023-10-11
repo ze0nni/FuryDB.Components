@@ -10,6 +10,7 @@ namespace FDB.Components.Settings
             new SettingsKey.EnumKeyFactory(),
             new SettingsKey.NumberKeyFactory(),
             new SettingsKey.ToggleFactory(),
+            new SettingsKey.BindingActionFactory(),
         };
 
         private static readonly List<ISettingsKeyFactory> _userKeyFactories = new List<ISettingsKeyFactory>();
@@ -23,13 +24,19 @@ namespace FDB.Components.Settings
             internal static void Store(SettingsKey key)
             {
                 var dKey = (key.Group.Page.Controller.SettingsType, key.Id);
-                _defaults.TryAdd(dKey, key.KeyField.GetValue(null));
+                var value = key.KeyField.GetValue(null);
+                if (value is ICloneable clonable)
+                    _defaults.TryAdd(dKey, clonable.Clone());
+                else
+                    _defaults.TryAdd(dKey, value);
             }
 
             internal static object Read(SettingsKey key)
             {
                 var dKey = (key.Group.Page.Controller.SettingsType, key.Id);
                 _defaults.TryGetValue(dKey, out var value);
+                if (value is ICloneable clonable)
+                    return clonable.Clone();
                 return value;
             }
         }
@@ -50,26 +57,28 @@ namespace FDB.Components.Settings
             return list;
         }
 
-        public static SettingsController New(Type settingsType)
+        private static readonly Dictionary<Type, SettingsController> _controllers 
+            = new Dictionary<Type, SettingsController>();
+
+        public static SettingsController Get(Type settingsType)
         {
-            return new SettingsController(
-                "default_user",
-                settingsType,
-                SettingsStorageAttribute.ResolveStorage(settingsType),
-                SettingHashAttribute.Resolve(settingsType, out var hashSalt),
-                hashSalt,
-                GetKeyFactories(settingsType));
+            return Get("default_user", settingsType);
         }
 
-        public static SettingsController New(string userId, Type settingsType)
+        public static SettingsController Get(string userId, Type settingsType)
         {
-            return new SettingsController(
-                userId,
-                settingsType,
-                SettingsStorageAttribute.ResolveStorage(settingsType),
-                SettingHashAttribute.Resolve(settingsType, out var hashSalt),
-                hashSalt,
-                GetKeyFactories(settingsType));
+            if (!_controllers.TryGetValue(settingsType, out var instance))
+            {
+                instance = new SettingsController(
+                    userId,
+                    settingsType,
+                    SettingsStorageAttribute.ResolveStorage(settingsType),
+                    SettingHashAttribute.Resolve(settingsType, out var hashSalt),
+                    hashSalt,
+                    GetKeyFactories(settingsType));
+                _controllers.Add(settingsType, instance);
+            }
+            return instance;
         }
     }
 }

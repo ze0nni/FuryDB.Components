@@ -22,6 +22,9 @@ namespace FDB.Components.Settings
         float RowHeight { get; }
         void OpenWindow(GuiWindow window);
         void CloseWindow();
+        void Repaint();
+        event Action<Event> OnGUIEvent;
+        event Action OnUpdate;
     }
 
     public sealed partial class SettingsPageGUI<TKeysData> : ISettingsGUIState
@@ -31,6 +34,8 @@ namespace FDB.Components.Settings
         private readonly GUIContent[] _groupNames;
 
         readonly GUIMode _mode;
+        readonly Action _repaint;
+
         GUIMode ISettingsGUIState.Mode => _mode;
         float _screenWidth;
         float ISettingsGUIState.ScreenWidth => _screenWidth;
@@ -47,15 +52,30 @@ namespace FDB.Components.Settings
         float _rowHeight;
         float ISettingsGUIState.RowHeight => _rowHeight;
 
+        public event Action<Event> OnGUIEvent;
+        public event Action OnUpdate;
+
         public event Action OnCloseClick;
+
+        void ISettingsGUIState.Repaint()
+        {
+            _repaint?.Invoke();
+        }
 
         public SettingsPageGUI(
             GUIMode mode,
-            SettingsController controler)
+            SettingsController controler,
+            Action repaint)
         {
             _mode = mode;
+            _repaint = repaint;
             _page = controler.NewPage<TKeysData>();
             _groupNames = _page.Groups.Select(x => new GUIContent(x.Name)).ToArray();
+        }
+
+        public void Update()
+        {
+            OnUpdate?.Invoke();
         }
 
         int _selectedGroup;
@@ -66,6 +86,8 @@ namespace FDB.Components.Settings
 
         public void OnGUI()
         {
+            OnGUIEvent?.Invoke(Event.current);
+
             switch (_mode)
             {
                 case GUIMode.Editor:

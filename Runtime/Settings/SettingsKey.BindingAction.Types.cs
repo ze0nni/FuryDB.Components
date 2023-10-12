@@ -60,6 +60,16 @@ namespace FDB.Components.Settings
             return default;
         }
 
+        public static bool operator ==(ActionTrigger a, ActionTrigger b)
+        {
+            return a.Key == b.Key && a.Axis == b.Axis && a.AxisPositive == b.AxisPositive;
+        }
+
+        public static bool operator !=(ActionTrigger a, ActionTrigger b)
+        {
+            return !(a == b);
+        }
+
         public override string ToString()
         {
             if (Key != KeyCode.None)

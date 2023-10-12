@@ -20,12 +20,15 @@ namespace FDB.Components.Settings
         void ISettingsGUIState.OpenWindow(GuiWindow window)
         {
             _window = window;
+            _repaint?.Invoke();
+            GUI.changed = true;
         }
 
         void ISettingsGUIState.CloseWindow()
         {
             _window.Value.OnClose?.Invoke();
             _window = null;
+            _repaint?.Invoke();
             GUI.changed = true;
         }
 

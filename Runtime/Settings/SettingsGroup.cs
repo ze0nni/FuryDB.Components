@@ -108,6 +108,10 @@ namespace FDB.Components.Settings
             {
                 key.Reset();
             }
+            foreach (var key in Keys)
+            {
+                key.UpdateDisplayState(this);
+            }
             IsChanged = false;
         }
     }

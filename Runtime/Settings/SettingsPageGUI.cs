@@ -19,7 +19,8 @@ namespace FDB.Components.Settings
         float Y { get; }
         float Width { get; }
         float Height { get; }
-        void OpenWindow(Rect? fieldRect, GuiWindow window);
+        float RowHeight { get; }
+        void OpenWindow(GuiWindow window);
         void CloseWindow();
     }
 
@@ -43,6 +44,8 @@ namespace FDB.Components.Settings
         float ISettingsGUIState.Width => _width;
         float _height;
         float ISettingsGUIState.Height => _height;
+        float _rowHeight;
+        float ISettingsGUIState.RowHeight => _rowHeight;
 
         public event Action OnCloseClick;
 
@@ -73,6 +76,8 @@ namespace FDB.Components.Settings
                         _y = 0;
                         _width = Screen.width;
                         _height = Screen.height;
+                        _rowHeight = GUI.skin.button.CalcHeight(GUIContent.none, 8);
+                        _height -= _rowHeight * 2; // hack
                     }
                     break;
                 case GUIMode.Screen:
@@ -83,6 +88,7 @@ namespace FDB.Components.Settings
                         _y = Screen.height / 8;
                         _width = Screen.width / 2;
                         _height = Screen.height - (Screen.height / 4);
+                        _rowHeight = GUI.skin.button.CalcHeight(GUIContent.none, 8);
                     }
                     break;
                 default:

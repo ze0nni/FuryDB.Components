@@ -8,23 +8,17 @@ namespace FDB.Components.Settings
         internal Rect FieldScreenRect;
 
         public bool Sticky;
-        public Action WndFunc;
+        public Action<Vector2> WndFunc;
         public Action OnClose;
-        public Func<Vector2> GetSize;
+        public Func<Rect> GetSize;
     }
 
     public sealed partial class SettingsPageGUI<TKeysData>
     {
         GuiWindow? _window;
 
-        void ISettingsGUIState.OpenWindow(
-            Rect? fieldRect,
-            GuiWindow window)
+        void ISettingsGUIState.OpenWindow(GuiWindow window)
         {
-            if (fieldRect != null)
-            {
-                window.FieldScreenRect = GUIUtility.GUIToScreenRect(fieldRect.Value);
-            }
             _window = window;
         }
 
@@ -55,15 +49,15 @@ namespace FDB.Components.Settings
             var wnd = _window.Value;
             var fieldRect = GUIUtility.ScreenToGUIRect(wnd.FieldScreenRect);
 
-            var popupRect = CalcPopupRect(fieldRect, wnd.GetSize());
+            var windowRect = FitToScreen(wnd.GetSize());
 
-            using (new GUILayout.AreaScope(popupRect, GUIContent.none, GUIStyle.none))
+            using (new GUILayout.AreaScope(windowRect, GUIContent.none, GUIStyle.none))
             {
-                wnd.WndFunc();
+                wnd.WndFunc(windowRect.size);
             }
 
             var e = Event.current;
-            if (!wnd.Sticky && e.type == EventType.MouseDown && !popupRect.Contains(e.mousePosition))
+            if (!wnd.Sticky && e.type == EventType.MouseDown && !windowRect.Contains(e.mousePosition))
             {
                 wnd.OnClose?.Invoke();
                 _window = null;
@@ -71,61 +65,15 @@ namespace FDB.Components.Settings
             }
         }
 
-        Rect CalcPopupRect(Rect field, Vector2 size)
+        Rect FitToScreen(Rect wnd)
         {
-            var screen = new Rect(0, 0, _screenWidth, _screenHeight);
-
-                var wnd = new Rect(0, 0, size.x, size.y);
-                if (wnd.height > _screenHeight)
-                {
-                    wnd.height = _screenHeight;
-                }
-            if (wnd.x > _screenWidth)
-            {
-                wnd.x = _screenWidth;
-            }
-            else
-            {
-                if (field.size != default)
-                {
-                    if (field.width >= wnd.width)
-                    {
-                        wnd.x = field.x;
-                    }
-                    else
-                    {
-                        wnd.x = field.xMax - wnd.width;
-                    }
-
-                    wnd.y = field.yMax;
-                    if (Inside(screen, wnd))
-                    {
-                        return wnd;
-                    }
-                    wnd.y = field.y - wnd.height;
-                    if (Inside(screen, wnd))
-                    {
-                        return wnd;
-                    }
-                    wnd.x = _screenWidth - wnd.width;
-                    if (Inside(screen, wnd))
-                    {
-                        return wnd;
-                    }
-                }
-            }
-
-            wnd.x = (_screenWidth - wnd.width) / 2;
-            wnd.y = (_screenHeight - wnd.height) / 2;
-
+            if (wnd.width > _screenWidth) wnd.width = _screenWidth;
+            if (wnd.height > _screenHeight) wnd.height = _screenHeight;
+            if (wnd.x < 0) wnd.x = 0;
+            if (wnd.y < 0) wnd.y = 0;
+            if (wnd.xMax > _screenWidth) wnd.x = _screenWidth - wnd.width;
+            if (wnd.yMax > _screenHeight) wnd.x = _screenHeight - wnd.height;
             return wnd;
-        }
-
-        public static bool Inside(Rect screen, Rect wnd) {
-            return wnd.x >= screen.x
-                && wnd.y >= screen.y
-                && wnd.xMax <= screen.xMax
-                && wnd.yMax <= screen.yMax;
         }
 
     }

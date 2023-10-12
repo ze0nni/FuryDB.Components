@@ -7,29 +7,30 @@ namespace FDB.Components.Settings
     {
         public static void ShowDropdownWindow(
             this ISettingsGUIState state,
-            Rect fieldRect,
+            Rect fieldRectRaw,
             Action wndFunc,
             bool sticky = false,
             float maxHeight = 0,
             Action wndBottomFunc = null,
             Action onClose = null)
         {
-            var wndWidth = fieldRect.width;
+            var fieldScreenRect = GUIUtility.GUIToScreenRect(fieldRectRaw);
+
             var scrollContentHeight = 0f;
             var scrollViewVPadding = //Not sure this is right
                 GUI.skin.box.padding.vertical;
             var bottomHeight = 0f;
 
-            float GetHeight() => scrollContentHeight + scrollViewVPadding + bottomHeight;
+            float GetContentHeight() => scrollContentHeight + scrollViewVPadding + bottomHeight;
 
             var scrollPos = new Vector2();
 
-            state.OpenWindow(fieldRect, new GuiWindow
+            state.OpenWindow(new GuiWindow
             {
                 Sticky = sticky,
-                WndFunc = () =>
+                WndFunc = (size) =>
                 {
-                    GUI.Box(new Rect(0, 0, wndWidth, GetHeight()), GUIContent.none);
+                    GUI.Box(new Rect(0, 0, size.x, size.y), GUIContent.none);
 
                     using (var scrollView = new GUILayout.ScrollViewScope(scrollPos))
                     {
@@ -61,36 +62,47 @@ namespace FDB.Components.Settings
                     }
                 },
                 OnClose = onClose,
-                GetSize = () => new Vector2(
-                    wndWidth,
-                    maxHeight > 0
-                    ? Mathf.Min(maxHeight, GetHeight())
-                    : GetHeight())
+                GetSize = () =>
+                {
+                    var fieldRect = GUIUtility.ScreenToGUIRect(fieldScreenRect);
+                    var w = fieldRect.width;
+                    var h = maxHeight == 0 ? GetContentHeight() : MathF.Min(maxHeight, GetContentHeight());
+                    var rect = new Rect(fieldRect.x, fieldRect.yMax, w, h);
+                    if (rect.yMax <= state.ScreenHeight)
+                    {
+                        return rect;
+                    }
+                    rect.y = fieldRect.y - h;
+                    return rect;
+                }
             });
         }
 
         public static void OpenWindow(
             this ISettingsGUIState state,
             string title,
-            float width,
-            float height,
+            float requestWidth,
+            float requestHeight,
             bool sticky,
             Action wndFunc,
             Action onClose = null)
         {
             state.OpenWindow(
-                null,
                 new GuiWindow
                 {
                     Sticky = sticky,
-                    WndFunc = () =>
+                    WndFunc = (size) =>
                     {
-                        GUI.Box(new Rect(0, 0, width, height), GUIContent.none, GUI.skin.window);
+                        GUI.Box(new Rect(0, 0, size.x, size.y), GUIContent.none, GUI.skin.window);
                         GUILayout.Label(title, GUI.skin.box, GUILayout.ExpandWidth(true));
                         wndFunc();
                     },
                     OnClose = onClose,
-                    GetSize = () => new Vector2(width, height)
+                    GetSize = () => new Rect(
+                        (state.ScreenWidth - requestWidth) / 2,
+                        (state.ScreenHeight - requestHeight) / 2,
+                        requestWidth, 
+                        requestHeight + state.RowHeight)
                 });
         }
     }

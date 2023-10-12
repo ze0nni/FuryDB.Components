@@ -28,7 +28,7 @@ namespace FDB.Components.Settings
                         {
                             state.OpenWindow(
                                 Data.Name,
-                                state.Width / 5, state.Height / 5,
+                                state.RowHeight * 10, state.RowHeight * 3,
                                 true,
                                 () =>
                                 {

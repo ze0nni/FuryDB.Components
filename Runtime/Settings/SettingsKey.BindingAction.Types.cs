@@ -95,9 +95,9 @@ namespace FDB.Components.Settings
         public ActionTrigger[] Triggers;
         public string[] Axis;
 
-        bool _presset;
-        bool _justPressed;
-        bool _justReleased;
+        internal bool _presset;
+        internal bool _justPressed;
+        internal bool _justReleased;
         [JsonIgnore] public bool Pressed => _presset;
         [JsonIgnore] public bool JustPressed => _justPressed;
         [JsonIgnore] public bool JustReleased => _justReleased;

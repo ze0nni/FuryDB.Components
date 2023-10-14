@@ -32,13 +32,7 @@ namespace FDB.Components.Settings
                     var index = i++;
                     if (GUILayout.Button(t.ToString()))
                     {
-                        var handle = ReadTrigger(state, state.CloseWindow, newT =>
-                        {
-                            newValue = Value;
-                            newValue.Triggers[index] = newT;
-                            Value = newValue;
-                            state.CloseWindow();
-                        });
+                        var handle = ReadTrigger(state, index, state.CloseWindow);
 
                         state.OpenWindow(
                             Data.Name,
@@ -65,14 +59,21 @@ namespace FDB.Components.Settings
                 }
             }
 
-            public ReadActionHandle ReadTrigger(ISettingsGUIState state, Action close, Action<ActionTrigger> callback)
+            public ReadActionHandle ReadTrigger(ISettingsGUIState state, int triggerIndex, Action close)
             {
-                return new ReadActionHandle(state, close, callback);
+                return new ReadActionHandle(state, close, (ActionTrigger t)  =>
+                {
+                    var value = Value;
+                    value.Triggers[triggerIndex] = t;
+                    Value = value;
+                });
             }
 
-            public ReadActionHandle ReadAxis(ISettingsGUIState state, Action close, Action<string> callback)
+            public ReadActionHandle ReadAxis(ISettingsGUIState state, int axisIndex, Action close)
             {
-                return new ReadActionHandle(state, close, callback);
+                return new ReadActionHandle(state, close, (string a) =>
+                {
+                });
             }
         }
     }
@@ -81,7 +82,7 @@ namespace FDB.Components.Settings
     {
         public readonly BindingActionType Type;
         readonly ISettingsGUIState _state;
-        readonly Action _close;
+        Action _close;
         readonly Action<ActionTrigger> _triggerCallback;
         readonly Action<string> _axisCallback;
 
@@ -114,7 +115,13 @@ namespace FDB.Components.Settings
 
         void OnUpdate()
         {
-
+            if (_state.Mode == GUIMode.Screen)
+            {
+                if (Input.anyKey)
+                {
+                    
+                }
+            }
         }
 
         void OnGUIEvent(Event e)
@@ -151,8 +158,15 @@ namespace FDB.Components.Settings
 
         public void Dispose()
         {
+            if (_close == null)
+            {
+                return;
+            }
             _state.OnUpdate -= OnUpdate;
             _state.OnGUIEvent -= OnGUIEvent;
+            var c = _close;
+            _close = null;
+            c.Invoke();
         }
     }
 }

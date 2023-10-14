@@ -37,7 +37,7 @@ namespace FDB.Components.Settings
             {
                 var bytes = Encoding.ASCII.GetBytes(userId);
                 var hash = _algorithm.ComputeHash(bytes);
-                return BitConverter.ToString(hash);
+                return BitConverter.ToString(hash).Replace("-", "");
             }
         }
     }

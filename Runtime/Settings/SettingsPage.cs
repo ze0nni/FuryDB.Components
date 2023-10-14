@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace FDB.Components.Settings
 {
@@ -9,6 +10,7 @@ namespace FDB.Components.Settings
     {
         public readonly string Name;
         public readonly bool Primary;
+        public readonly GameObject PrimaryGameObject;
         readonly Dictionary<Type, SettingsPage> _primaryMap = new Dictionary<Type, SettingsPage>();
         public readonly SettingsController Controller;
         public readonly Registry Registrty = new Registry();
@@ -48,6 +50,11 @@ namespace FDB.Components.Settings
         {
             Name = controller.SettingsType.Name;
             Primary = primary;
+            if (primary && Application.isPlaying)
+            {
+                PrimaryGameObject = new GameObject($"[{nameof(SettingsController)}:{controller.SettingsType.FullName}]");
+                GameObject.DontDestroyOnLoad(PrimaryGameObject);
+            }
             Controller = controller;
 
             if (primary)

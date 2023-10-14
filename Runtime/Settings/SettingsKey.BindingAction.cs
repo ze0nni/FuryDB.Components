@@ -30,6 +30,14 @@ namespace FDB.Components.Settings
                 FieldInfo keyField
                 ) : base(group, keyField)
             {
+                if (group.Page.PrimaryGameObject != null)
+                {
+                    if (!group.Page.PrimaryGameObject.TryGetComponent<BindingActionMediator>(out var mediator))
+                    {
+                        mediator = group.Page.PrimaryGameObject.AddComponent<BindingActionMediator>();
+                    }
+                    mediator.Listen(keyField);
+                }
             }
 
             protected override BindingAction ReadValue(object value)

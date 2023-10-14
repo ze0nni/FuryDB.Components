@@ -9,39 +9,45 @@ using UnityEngine;
 namespace FDB.Components.Settings
 {
     [DefaultExecutionOrder(-100)]
-    public sealed class BindingKeyMediator : MonoBehaviour
+    public sealed class BindingMediator : MonoBehaviour
     {
-        struct State
+        struct ButtonState
         {
-            public Func<BindingAction> Getter;
-            public Action<BindingAction> Setter;
+            public Func<BindingButton> Getter;
+            public Action<BindingButton> Setter;
         }
 
-        State[] _triggers = new State[128];
+        struct AxisState
+        {
+            public Func<BindingAxis> Getter;
+            public Action<BindingAxis> Setter;
+        }
+
+        ButtonState[] _triggers = new ButtonState[128];
         int _triggersCount;
-        State[] _axis = new State[128];
+        AxisState[] _axis = new AxisState[128];
         int _axisCount;
 
         int _joysticsCount = 0;
 
         readonly Dictionary<string, bool> _excludeAxis = new Dictionary<string, bool>();
 
-        internal void ListenBindingKey(FieldInfo fieldInfo)
+        internal void ListenKey(FieldInfo fieldInfo)
         {
             try
             {
                 var field = Expression.Field(null, fieldInfo);
                 var value = Expression.Parameter(fieldInfo.FieldType);
                 var getter = Expression
-                    .Lambda<Func<BindingAction>>(field)
+                    .Lambda<Func<BindingButton>>(field)
                     .Compile();
                 var setter = Expression
-                    .Lambda<Action<BindingAction>>(
+                    .Lambda<Action<BindingButton>>(
                         Expression.Assign(field, value),
                         value)
                     .Compile();
 
-                var state = new State
+                var state = new ButtonState
                 {
                     Getter = getter,
                     Setter = setter
@@ -55,11 +61,40 @@ namespace FDB.Components.Settings
             }
         }
 
-        void Append(ref int count, ref State[] states, in State state)
+        internal void ListenAxis(FieldInfo fieldInfo)
+        {
+            try
+            {
+                var field = Expression.Field(null, fieldInfo);
+                var value = Expression.Parameter(fieldInfo.FieldType);
+                var getter = Expression
+                    .Lambda<Func<BindingAxis>>(field)
+                    .Compile();
+                var setter = Expression
+                    .Lambda<Action<BindingAxis>>(
+                        Expression.Assign(field, value),
+                        value)
+                    .Compile();
+
+                var state = new AxisState
+                {
+                    Getter = getter,
+                    Setter = setter
+                };
+                Append(ref _axisCount, ref _axis, in state);
+            }
+            catch (Exception exc)
+            {
+                Debug.LogError($"Error when create listener of {fieldInfo.Name}");
+                Debug.LogException(exc);
+            }
+        }
+
+        void Append<T>(ref int count, ref T[] states, in T state)
         {
             if (count == states.Length)
             {
-                var newStates = new State[states.Length * 2];
+                var newStates = new T[states.Length * 2];
                 Array.Copy(states, newStates, states.Length);
             }
             states[count++] = state;
@@ -107,7 +142,7 @@ namespace FDB.Components.Settings
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        bool GetPressed(ref ActionTrigger t)
+        bool GetPressed(ref ButtonTrigger t)
         {
             if (t.Key != KeyCode.None)
             {
@@ -138,33 +173,33 @@ namespace FDB.Components.Settings
             }
         }
 
-        public bool ReadTrigger(BindingKeyFilterFlags filter, out ActionTrigger value)
+        public bool ReadAnyButton(BindingFilterFlags filter, out ButtonTrigger value)
         {
-            if (filter.HasFlag(BindingKeyFilterFlags.Keyboard) 
+            if (filter.HasFlag(BindingFilterFlags.Keyboard)
                 && ReadKeyCodes(SettingsController.DefaultKeyboardKeyCodes, out value))
             {
                 return true;
             }
 
-            if (filter.HasFlag(BindingKeyFilterFlags.Joystick)
+            if (filter.HasFlag(BindingFilterFlags.Joystick)
                 && ReadKeyCodes(SettingsController.DefaultJoystickKeyCodes, out value))
             {
                 return true;
             }
 
-            if (filter.HasFlag(BindingKeyFilterFlags.MouseKeys)
+            if (filter.HasFlag(BindingFilterFlags.MouseKeys)
                 && ReadKeyCodes(SettingsController.DefaultMouseKeyCodes, out value))
             {
                 return true;
             }
 
-            if (filter.HasFlag(BindingKeyFilterFlags.MouseAxis)
+            if (filter.HasFlag(BindingFilterFlags.MouseAxis)
                 && ReadAxis(SettingsController.DefaultMouseAxis, out value))
             {
                 return true;
             }
 
-            if (filter.HasFlag(BindingKeyFilterFlags.Joystick)
+            if (filter.HasFlag(BindingFilterFlags.Joystick)
                 && ReadAxis(SettingsController.DefaultJoystickAxis, out value))
             {
                 return true;
@@ -174,7 +209,43 @@ namespace FDB.Components.Settings
             return false;
         }
 
-        private bool ReadKeyCodes(KeyCode[] codes, out ActionTrigger value)
+        public bool ReadAxis(BindingFilterFlags filter, out ButtonTrigger value)
+        {
+            if (filter.HasFlag(BindingFilterFlags.Keyboard)
+                && ReadKeyCodes(SettingsController.DefaultKeyboardKeyCodes, out value))
+            {
+                return true;
+            }
+
+            if (filter.HasFlag(BindingFilterFlags.Joystick)
+                && ReadKeyCodes(SettingsController.DefaultJoystickKeyCodes, out value))
+            {
+                return true;
+            }
+
+            if (filter.HasFlag(BindingFilterFlags.MouseKeys)
+                && ReadKeyCodes(SettingsController.DefaultMouseKeyCodes, out value))
+            {
+                return true;
+            }
+
+            if (filter.HasFlag(BindingFilterFlags.MouseAxis)
+                && ReadAxis(SettingsController.DefaultMouseAxis, out value))
+            {
+                return true;
+            }
+
+            if (filter.HasFlag(BindingFilterFlags.Joystick)
+                && ReadAxis(SettingsController.DefaultJoystickAxis, out value))
+            {
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
+
+        private bool ReadKeyCodes(KeyCode[] codes, out ButtonTrigger value)
         {
             foreach (var c in codes)
             {
@@ -188,7 +259,7 @@ namespace FDB.Components.Settings
             return false;
         }
 
-        private bool ReadAxis(string[] axis, out ActionTrigger value)
+        private bool ReadAxis(string[] axis, out ButtonTrigger value)
         {
             foreach (var a in axis)
             {
@@ -201,6 +272,36 @@ namespace FDB.Components.Settings
                 if (v < 0)
                 {
                     value = $"-{a}";
+                    return true;
+                }
+            }
+            value = default;
+            return false;
+        }
+
+        public bool ReadAnyAxis(BindingFilterFlags filter, out AxisTrigger value)
+        {
+            if (filter.HasFlag(BindingFilterFlags.MouseAxis)
+                && ReadAxis(SettingsController.DefaultMouseAxis, out value))
+            {
+                return true;
+            }
+            if (filter.HasFlag(BindingFilterFlags.Joystick)
+                && ReadAxis(SettingsController.DefaultJoystickAxis, out value))
+            {
+                return true;
+            }
+            value = default;
+            return false;
+        }
+
+        private bool ReadAxis(string[] axis, out AxisTrigger value)
+        {
+            foreach (var a in axis)
+            {
+                if (GetAxis(a) != 0)
+                {
+                    value = a;
                     return true;
                 }
             }

@@ -6,31 +6,31 @@ using UnityEngine;
 
 namespace FDB.Components.Settings
 {
-    public struct ActionTrigger
+    public struct ButtonTrigger
     {
         [JsonConverter(typeof(StringEnumConverter))]
         public KeyCode Key;
         public string Axis;
         public bool AxisPositive;
 
-        public ActionTrigger(KeyCode key)
+        public ButtonTrigger(KeyCode key)
         {
             Key = key;
             Axis = null;
             AxisPositive = false;
         }
 
-        public ActionTrigger(string axis, bool isPositive)
+        public ButtonTrigger(string axis, bool isPositive)
         {
             Key = KeyCode.None;
             Axis = axis;
             AxisPositive = isPositive;
         }
 
-        public static implicit operator ActionTrigger(KeyCode key) =>
-            new ActionTrigger(key);
+        public static implicit operator ButtonTrigger(KeyCode key) =>
+            new ButtonTrigger(key);
 
-        public static implicit operator ActionTrigger(string axis)
+        public static implicit operator ButtonTrigger(string axis)
         {
             if (axis.StartsWith('+'))
                 return (axis.Substring(1), +1);
@@ -39,26 +39,26 @@ namespace FDB.Components.Settings
             return (axis.Substring(1), +1);
         }
 
-        public static implicit operator ActionTrigger((string axis, int value) pair)
+        public static implicit operator ButtonTrigger((string axis, int value) pair)
         {
             if (pair.value > 0)
             {
-                return new ActionTrigger(pair.axis, true);
+                return new ButtonTrigger(pair.axis, true);
             }
             if (pair.value < 0)
             {
-                return new ActionTrigger(pair.axis, false);
+                return new ButtonTrigger(pair.axis, false);
             }
             Debug.LogWarning($"Excepted positive or negative value for axis {pair.axis}");
             return default;
         }
 
-        public static bool operator ==(ActionTrigger a, ActionTrigger b)
+        public static bool operator ==(ButtonTrigger a, ButtonTrigger b)
         {
             return a.Key == b.Key && a.Axis == b.Axis && a.AxisPositive == b.AxisPositive;
         }
 
-        public static bool operator !=(ActionTrigger a, ActionTrigger b)
+        public static bool operator !=(ButtonTrigger a, ButtonTrigger b)
         {
             return !(a == b);
         }
@@ -75,23 +75,23 @@ namespace FDB.Components.Settings
         }
     }
 
-    public struct BindingAction : IEquatable<BindingAction>, ICloneable
+    public struct BindingButton : IEquatable<BindingButton>, ICloneable
     {
-        public static BindingAction KeyMoveUp => Of(KeyCode.W, "-JoyY");
-        public static BindingAction KeyMoveDown => Of(KeyCode.S, "+JoyY");
-        public static BindingAction KeyMoveLeft => Of(KeyCode.A, "-JoyX");
-        public static BindingAction KeyMoveRight => Of(KeyCode.D, "+JoyX");
-        public static BindingAction KeyFire => Of(KeyCode.Mouse0, KeyCode.Joystick1Button0);
-        public static BindingAction KeyJump => Of(KeyCode.Space, KeyCode.Joystick1Button1);
+        public static BindingButton KeyMoveUp => Of(KeyCode.W, "-JoyY");
+        public static BindingButton KeyMoveDown => Of(KeyCode.S, "+JoyY");
+        public static BindingButton KeyMoveLeft => Of(KeyCode.A, "-JoyX");
+        public static BindingButton KeyMoveRight => Of(KeyCode.D, "+JoyX");
+        public static BindingButton KeyFire => Of(KeyCode.Mouse0, KeyCode.Joystick1Button0);
+        public static BindingButton KeyJump => Of(KeyCode.Space, KeyCode.Joystick1Button1);
 
-        public static BindingAction Of(params ActionTrigger[] triggers)
+        public static BindingButton Of(params ButtonTrigger[] triggers)
         {
-            var b = new BindingAction();
+            var b = new BindingButton();
             b.Triggers = triggers;
             return b;
         }
 
-        public ActionTrigger[] Triggers;
+        public ButtonTrigger[] Triggers;
 
         internal bool _presset;
         internal bool _justPressed;
@@ -100,7 +100,7 @@ namespace FDB.Components.Settings
         [JsonIgnore] public bool JustPressed => _justPressed;
         [JsonIgnore] public bool JustReleased => _justReleased;
 
-        public bool Equals(BindingAction other)
+        public bool Equals(BindingButton other)
         {
             return (object.ReferenceEquals(Triggers, other.Triggers) 
                 || Enumerable.SequenceEqual(Triggers, other.Triggers));
@@ -112,25 +112,25 @@ namespace FDB.Components.Settings
             return HashCode.Combine(Triggers);
         }
 
-        public static BindingAction FromTriggers(params ActionTrigger[] triggers)
+        public static BindingButton FromTriggers(params ButtonTrigger[] triggers)
         {
-            var b = new BindingAction();
+            var b = new BindingButton();
             b.Triggers = triggers;
             return b;
         }
 
-        public static implicit operator BindingAction(ActionTrigger trigger)
+        public static implicit operator BindingButton(ButtonTrigger trigger)
         {
             return FromTriggers(trigger);
         }
 
-        public static implicit operator BindingAction((ActionTrigger t0, ActionTrigger t1) triggers)
+        public static implicit operator BindingButton((ButtonTrigger t0, ButtonTrigger t1) triggers)
         {
             return FromTriggers(triggers.t0, triggers.t1);
         }
 
-        public static BindingAction operator +(BindingAction def, BindingAction curr) {
-            curr = (BindingAction)curr.Clone();
+        public static BindingButton operator +(BindingButton def, BindingButton curr) {
+            curr = (BindingButton)curr.Clone();
             
             
             Merge(ref curr.Triggers, ref def.Triggers, t => t.IsNull);
@@ -175,7 +175,7 @@ namespace FDB.Components.Settings
 
         public object Clone()
         {
-            var b = new BindingAction();
+            var b = new BindingButton();
             b.Triggers = Triggers?.ToArray();
             return b;
         }

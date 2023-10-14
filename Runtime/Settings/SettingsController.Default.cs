@@ -67,7 +67,8 @@ namespace FDB.Components.Settings
             new EnumKeyFactory(),
             new NumberKeyFactory(),
             new ToggleFactory(),
-            new BindingFactory(),
+            new BindingButtonFactory(),
+            new BindingAxisFactory(),
         };
 
         private static readonly List<ISettingsKeyFactory> _userKeyFactories = new List<ISettingsKeyFactory>();

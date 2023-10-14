@@ -217,7 +217,7 @@ namespace FDB.Components.Settings
     {
         private TValue _value;
 
-        protected TValue OriginValue => _value;
+        protected TValue DirectValue => _value;
         public TValue Value
         {
             get {

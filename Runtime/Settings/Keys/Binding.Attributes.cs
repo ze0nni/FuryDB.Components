@@ -1,11 +1,10 @@
 using System;
 using System.Reflection;
-using UnityEngine;
 
 namespace FDB.Components.Settings
 {
     [Flags]
-    public enum BindingKeyFilterFlags
+    public enum BindingFilterFlags
     {
         Keyboard = 1 << 0,
         Joystick = 1 << 1,
@@ -15,33 +14,36 @@ namespace FDB.Components.Settings
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Field, AllowMultiple = false)]
-    public sealed class BindingKeyFilterAttribute : Attribute
+    public sealed class BindingFilterAttributeAttribute : Attribute
     {
-        public BindingKeyFilterFlags Flags;
-        public BindingKeyFilterAttribute(BindingKeyFilterFlags flags) => Flags = flags;
+        public BindingFilterFlags Flags;
+        public BindingFilterAttributeAttribute(BindingFilterFlags flags) => Flags = flags;
 
-        public static BindingKeyFilterFlags Resolve(FieldInfo field)
+        public static BindingFilterFlags Resolve(FieldInfo field)
         {
-            var resultFlags = BindingKeyFilterFlags.All;
+            var resultFlags = BindingFilterFlags.All;
 
-            var fieldAttr = field.GetCustomAttribute<BindingKeyFilterAttribute>();
+            var fieldAttr = field.GetCustomAttribute<BindingFilterAttributeAttribute>();
             if (fieldAttr != null)
             {
-                resultFlags = fieldAttr.Flags;
+                return fieldAttr.Flags;
             }
 
-            void FindInParent(Type parent, ref BindingKeyFilterFlags flags)
+            void FindInParent(Type parent, ref BindingFilterFlags flags)
             {
                 if (parent == null)
                 {
                     return;
                 }
-                var attr = parent.GetCustomAttribute<BindingKeyFilterAttribute>();
+                var attr = parent.GetCustomAttribute<BindingFilterAttributeAttribute>();
                 if (attr != null)
                 {
                     flags = attr.Flags;
                 }
-                FindInParent(parent.DeclaringType, ref flags);
+                else
+                {
+                    FindInParent(parent.DeclaringType, ref flags);
+                }
             }
             FindInParent(field.DeclaringType, ref resultFlags);
 

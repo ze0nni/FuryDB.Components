@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace FDB.Components.Settings
 {
-    internal class BindingFactory : ISettingsKeyFactory
+    internal class BindingButtonFactory : ISettingsKeyFactory
     {
         public SettingsKey<TKeyData> Produce<TKeyData>(
             KeyContext context,
@@ -11,66 +11,66 @@ namespace FDB.Components.Settings
             FieldInfo keyField)
             where TKeyData : ISettingsKeyData
         {
-            if (keyField.FieldType != typeof(BindingAction))
+            if (keyField.FieldType != typeof(BindingButton))
             {
                 return null;
             }
-            return new BindingKey<TKeyData>(context, group, keyField);
+            return new BindingButtonKey<TKeyData>(context, group, keyField);
         }
     }
 
-    public sealed partial class BindingKey<TKeyData> : SettingsKey<BindingAction, TKeyData>
+    public sealed partial class BindingButtonKey<TKeyData> : SettingsKey<BindingButton, TKeyData>
         where TKeyData : ISettingsKeyData
     {
-        public readonly BindingKeyFilterFlags FilterFlags;
+        public readonly BindingFilterFlags FilterFlags;
 
-        internal BindingKey(
+        internal BindingButtonKey(
             KeyContext context,
             SettingsGroup<TKeyData> group,
             FieldInfo keyField
             ) : base(group, keyField)
         {
-            FilterFlags = BindingKeyFilterAttribute.Resolve(keyField);
+            FilterFlags = BindingFilterAttributeAttribute.Resolve(keyField);
 
             if (group.Page.PrimaryGameObject != null)
             {
                 var mediator = context.PrimaryRegistry.GetOrCreate(
                     null,
-                    () => group.Page.PrimaryGameObject.AddComponent<BindingKeyMediator>());
-                mediator.ListenBindingKey(keyField);
+                    () => group.Page.PrimaryGameObject.AddComponent<BindingMediator>());
+                mediator.ListenKey(keyField);
             }
         }
 
-        protected override BindingAction ReadValue(object value)
+        protected override BindingButton ReadValue(object value)
         {
-            var def = (BindingAction)SettingsController.DefaultKeys.Read(this);
-            var curr = (BindingAction)value;
+            var def = (BindingButton)SettingsController.DefaultKeys.Read(this);
+            var curr = (BindingButton)value;
 
             curr = def + curr;
 
             return curr;
         }
 
-        protected override bool ValidateValue(ref BindingAction value)
+        protected override bool ValidateValue(ref BindingButton value)
         {
             return true;
         }
 
-        protected override BindingAction ValueFromJson(JsonTextReader reader)
+        protected override BindingButton ValueFromJson(JsonTextReader reader)
         {
             var s = new JsonSerializer();
-            var v = s.Deserialize<BindingAction>(reader);
+            var v = s.Deserialize<BindingButton>(reader);
             return v;
         }
 
-        protected override void ValueToJson(JsonTextWriter writer, BindingAction value)
+        protected override void ValueToJson(JsonTextWriter writer, BindingButton value)
         {
             var s = new JsonSerializer();
             s.DefaultValueHandling = DefaultValueHandling.Ignore;
             s.Serialize(writer, value);
         }
 
-        protected override object WriteValue(BindingAction value)
+        protected override object WriteValue(BindingButton value)
         {
             return value;
         }

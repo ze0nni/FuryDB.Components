@@ -4,12 +4,12 @@ using UnityEngine;
 
 namespace FDB.Components.Settings
 {
-    public sealed partial class BindingKey<TKeyData> : SettingsKey<BindingAction, TKeyData>
+    public sealed partial class BindingButtonKey<TKeyData> : SettingsKey<BindingButton, TKeyData>
             where TKeyData : ISettingsKeyData
     {
         protected internal override void OnFieldGUI(ISettingsGUIState state, float containerWidth)
         {
-            var newValue = OriginValue;
+            var newValue = DirectValue;
             if (newValue.Triggers == null)
             {
                 return;
@@ -49,10 +49,10 @@ namespace FDB.Components.Settings
             }
         }
 
-        public ReadBindingKeyHandle ReadTrigger(ISettingsGUIState state, int triggerIndex, Action close)
+        public ReadBindingButtonHandle ReadTrigger(ISettingsGUIState state, int triggerIndex, Action close)
         {
-            var mediator = Group.Page.Controller.Registry.Get<BindingKeyMediator>();
-            return new ReadBindingKeyHandle(mediator, state, FilterFlags, close, (ActionTrigger t) =>
+            var mediator = Group.Page.Controller.Registry.Get<BindingMediator>();
+            return new ReadBindingButtonHandle(mediator, state, FilterFlags, close, (ButtonTrigger t) =>
             {
                 var value = Value;
                 value.Triggers[triggerIndex] = t;
@@ -62,23 +62,23 @@ namespace FDB.Components.Settings
     }
 }
 
-public class ReadBindingKeyHandle : IDisposable
+public class ReadBindingButtonHandle : IDisposable
 {
-    readonly BindingKeyMediator _mediator;
+    readonly BindingMediator _mediator;
     readonly ISettingsGUIState _state;
-    readonly BindingKeyFilterFlags _filter;
+    readonly BindingFilterFlags _filter;
     Action _close;
-    readonly Action<ActionTrigger> _triggerCallback;
+    readonly Action<ButtonTrigger> _triggerCallback;
 
     private KeyCode? _firstKey;
     public KeyCode? First => _firstKey;
 
-    internal ReadBindingKeyHandle(
-        BindingKeyMediator mediator,
+    internal ReadBindingButtonHandle(
+        BindingMediator mediator,
         ISettingsGUIState state,
-        BindingKeyFilterFlags filter,
+        BindingFilterFlags filter,
         Action close,
-        Action<ActionTrigger> callback)
+        Action<ButtonTrigger> callback)
     {
         _mediator = mediator;
         _state = state;
@@ -94,13 +94,13 @@ public class ReadBindingKeyHandle : IDisposable
         _state.OnGUIEvent += OnGUIEvent;
     }
 
-    ActionTrigger _lastReadedTrigger;
+    ButtonTrigger _lastReadedTrigger;
 
     void OnUpdate()
     {
         if (_state.Mode == GUIMode.Screen)
         {
-            if (_mediator.ReadTrigger(_filter, out var t))
+            if (_mediator.ReadAnyButton(_filter, out var t))
             {
                 if (_lastReadedTrigger != t)
                 {
@@ -130,7 +130,7 @@ public class ReadBindingKeyHandle : IDisposable
         }
     }
 
-    void Perform(ActionTrigger t)
+    void Perform(ButtonTrigger t)
     {
         if (t.Key == KeyCode.Escape && _firstKey == null)
         {

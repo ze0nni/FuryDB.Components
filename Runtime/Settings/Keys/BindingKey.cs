@@ -22,12 +22,16 @@ namespace FDB.Components.Settings
     public sealed partial class BindingKey<TKeyData> : SettingsKey<BindingAction, TKeyData>
         where TKeyData : ISettingsKeyData
     {
+        public readonly BindingKeyFilterFlags FilterFlags;
+
         internal BindingKey(
             KeyContext context,
             SettingsGroup<TKeyData> group,
             FieldInfo keyField
             ) : base(group, keyField)
         {
+            FilterFlags = BindingKeyFilterAttribute.Resolve(keyField);
+
             if (group.Page.PrimaryGameObject != null)
             {
                 var mediator = context.PrimaryRegistry.GetOrCreate(

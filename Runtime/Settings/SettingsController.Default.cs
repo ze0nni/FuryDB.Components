@@ -7,10 +7,14 @@ namespace FDB.Components.Settings
 {
     public sealed partial class SettingsController
     {
-        internal static readonly string[] DefaultAxis = new string[]
+        internal static readonly string[] DefaultMouseAxis = new string[]
         {
             "MouseX",
-            "MouseY",
+            "MouseY"
+        };
+
+        internal static readonly string[] DefaultJoystickAxis = new string[]
+        {
             "JoyX",
             "JoyY",
             "Joy3",
@@ -41,10 +45,22 @@ namespace FDB.Components.Settings
             "Joy28"
         };
 
-        internal static KeyCode[] DefaultKeyCodes = Enum
+        internal static KeyCode[] DefaultKeyboardKeyCodes = Enum
             .GetValues(typeof(KeyCode))
             .Cast<KeyCode>()
-            .Where(c => c != KeyCode.None && (!c.ToString().StartsWith("Joystick") || c.ToString().StartsWith("JoystickButton")))
+            .Where(c => c != KeyCode.None && !c.ToString().StartsWith("Joystick") && !c.ToString().StartsWith("Mouse"))
+            .ToArray();
+
+        internal static KeyCode[] DefaultMouseKeyCodes = Enum
+            .GetValues(typeof(KeyCode))
+            .Cast<KeyCode>()
+            .Where(c => c.ToString().StartsWith("Mouse"))
+            .ToArray();
+
+        internal static KeyCode[] DefaultJoystickKeyCodes = Enum
+            .GetValues(typeof(KeyCode))
+            .Cast<KeyCode>()
+            .Where(c => c.ToString().StartsWith("JoystickButton"))
             .ToArray();
 
         internal static IReadOnlyList<ISettingsKeyFactory> DefaultKeyFactories = new ISettingsKeyFactory[] {

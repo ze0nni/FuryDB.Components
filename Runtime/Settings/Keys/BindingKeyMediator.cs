@@ -83,7 +83,7 @@ namespace FDB.Components.Settings
             if (_excludeAxis.Count == 0 || _joysticsCount != Input.GetJoystickNames().Length)
             {
                 _joysticsCount = Input.GetJoystickNames().Length;
-                UpdateDefaultAxis();
+                ExcludeJoystickAxis();
             }
 
             for (var i = 0; i < _triggersCount; i++)
@@ -143,25 +143,67 @@ namespace FDB.Components.Settings
             return Input.GetAxis(name);
         }
 
-        void UpdateDefaultAxis()
+        void ExcludeJoystickAxis()
         {
-            foreach (var a in SettingsController.DefaultAxis)
+            foreach (var a in SettingsController.DefaultJoystickAxis)
             {
                 _excludeAxis[a] = Input.GetAxis(a) != 0;
             }
         }
 
-        public bool ReadTrigger(out ActionTrigger value)
+        public bool ReadTrigger(BindingKeyFilterFlags filter, out ActionTrigger value)
         {
-            foreach (var c in SettingsController.DefaultKeyCodes) {
+            if (filter.HasFlag(BindingKeyFilterFlags.Keyboard) 
+                && ReadKeyCodes(SettingsController.DefaultKeyboardKeyCodes, out value))
+            {
+                return true;
+            }
+
+            if (filter.HasFlag(BindingKeyFilterFlags.Joystick)
+                && ReadKeyCodes(SettingsController.DefaultJoystickKeyCodes, out value))
+            {
+                return true;
+            }
+
+            if (filter.HasFlag(BindingKeyFilterFlags.MouseKeys)
+                && ReadKeyCodes(SettingsController.DefaultMouseKeyCodes, out value))
+            {
+                return true;
+            }
+
+            if (filter.HasFlag(BindingKeyFilterFlags.MouseAxis)
+                && ReadAxis(SettingsController.DefaultMouseAxis, out value))
+            {
+                return true;
+            }
+
+            if (filter.HasFlag(BindingKeyFilterFlags.Joystick)
+                && ReadAxis(SettingsController.DefaultJoystickAxis, out value))
+            {
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
+
+        private bool ReadKeyCodes(KeyCode[] codes, out ActionTrigger value)
+        {
+            foreach (var c in codes)
+            {
                 if (Input.GetKey(c))
                 {
                     value = c;
                     return true;
                 }
             }
+            value = default;
+            return false;
+        }
 
-            foreach (var a in SettingsController.DefaultAxis)
+        private bool ReadAxis(string[] axis, out ActionTrigger value)
+        {
+            foreach (var a in axis)
             {
                 var v = GetAxis(a);
                 if (v > 0)

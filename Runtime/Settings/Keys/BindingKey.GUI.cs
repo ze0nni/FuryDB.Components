@@ -61,7 +61,7 @@ namespace FDB.Components.Settings
             public ReadBindingHandle ReadTrigger(ISettingsGUIState state, int triggerIndex, Action close)
             {
                 var mediator = Group.Page.Controller.Registry.Get<BindingKeyMediator>();
-                return new ReadBindingHandle(mediator, state, close, (ActionTrigger t)  =>
+                return new ReadBindingHandle(mediator, state, FilterFlags, close, (ActionTrigger t)  =>
                 {
                     var value = Value;
                     value.Triggers[triggerIndex] = t;
@@ -72,7 +72,7 @@ namespace FDB.Components.Settings
             public ReadBindingHandle ReadAxis(ISettingsGUIState state, int axisIndex, Action close)
             {
                 var mediator = Group.Page.Controller.Registry.Get<BindingKeyMediator>();
-                return new ReadBindingHandle(mediator, state, close, (string a) =>
+                return new ReadBindingHandle(mediator, state, FilterFlags, close, (string a) =>
                 {
                 });
             }
@@ -84,6 +84,7 @@ public class ReadBindingHandle : IDisposable
     public readonly BindingActionType Type;
     readonly BindingKeyMediator _mediator;
     readonly ISettingsGUIState _state;
+    readonly BindingKeyFilterFlags _filter;
     Action _close;
     readonly Action<ActionTrigger> _triggerCallback;
     readonly Action<string> _axisCallback;
@@ -91,21 +92,33 @@ public class ReadBindingHandle : IDisposable
     private KeyCode? _firstKey;
     public KeyCode? First => _firstKey;
 
-    internal ReadBindingHandle(BindingKeyMediator mediator, ISettingsGUIState state, Action close, Action<ActionTrigger> callback)
+    internal ReadBindingHandle(
+        BindingKeyMediator mediator,
+        ISettingsGUIState state,
+        BindingKeyFilterFlags filter,
+        Action close,
+        Action<ActionTrigger> callback)
     {
         Type = BindingActionType.Trigger;
         _mediator = mediator;
         _state = state;
+        _filter = filter;
         _close = close;
         _triggerCallback = callback;
         Listen();
     }
 
-    internal ReadBindingHandle(BindingKeyMediator mediator, ISettingsGUIState state, Action close, Action<string> callback)
+    internal ReadBindingHandle(
+        BindingKeyMediator mediator,
+        ISettingsGUIState state,
+        BindingKeyFilterFlags filter,
+        Action close,
+        Action<string> callback)
     {
         Type = BindingActionType.Axis;
         _mediator = mediator;
         _state = state;
+        _filter = filter;
         _close = close;
         _axisCallback = callback;
         Listen();
@@ -125,7 +138,7 @@ public class ReadBindingHandle : IDisposable
         {
             if (Type == BindingActionType.Trigger)
             {
-                if (_mediator.ReadTrigger(out var t))
+                if (_mediator.ReadTrigger(_filter, out var t))
                 {
                     if (_lastReadedTrigger != t)
                     {

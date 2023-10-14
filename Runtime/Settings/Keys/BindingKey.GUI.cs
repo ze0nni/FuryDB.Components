@@ -35,7 +35,7 @@ namespace FDB.Components.Settings
 
                         state.OpenWindow(
                             Data.Name,
-                            state.RowHeight * 10, state.RowHeight * 3,
+                            state.RowHeight * 15, state.RowHeight * 3,
                             true,
                             () =>
                             {
@@ -45,10 +45,10 @@ namespace FDB.Components.Settings
                                     GUILayout.FlexibleSpace();
                                     if (handle.First == null)
                                     {
-                                        GUILayout.Label("Read input...");
+                                        GUILayout.Label("Read input");
                                     } else
                                     {
-                                        GUILayout.Label($"{handle.First}?");
+                                        GUILayout.Label($"Press {handle.First} again");
                                     }
                                     GUILayout.FlexibleSpace();
                                 }
@@ -117,13 +117,28 @@ public class ReadBindingHandle : IDisposable
         _state.OnGUIEvent += OnGUIEvent;
     }
 
+    ActionTrigger _lastReadedTrigger;
+
     void OnUpdate()
     {
         if (_state.Mode == GUIMode.Screen)
         {
-            if (Type == BindingActionType.Trigger && _mediator.ReadTrigger(out var t))
+            if (Type == BindingActionType.Trigger)
             {
-                Perform(t);
+                if (_mediator.ReadTrigger(out var t))
+                {
+                    if (_lastReadedTrigger != t)
+                    {
+                        _lastReadedTrigger = t;
+                        if (!t.IsNull)
+                        {
+                            Perform(t);
+                        }
+                    }
+                } else
+                {
+                    _lastReadedTrigger = default;
+                }
             }
         }
     }
@@ -146,10 +161,17 @@ public class ReadBindingHandle : IDisposable
         {
             _firstKey = t.Key;
         }
-        else if (t.Key == KeyCode.Escape && _firstKey == KeyCode.Escape)
+        else if (_firstKey != null)
         {
-            Dispose();
-            _triggerCallback(t);
+            if (t.Key == _firstKey)
+            {
+                Dispose();
+                _triggerCallback(t);
+            } else
+            {
+                _triggerCallback(default);
+                Dispose();
+            }
         }
         else
         {

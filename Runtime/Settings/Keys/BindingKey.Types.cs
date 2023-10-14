@@ -70,6 +70,8 @@ namespace FDB.Components.Settings
             return !(a == b);
         }
 
+        public bool IsNull => Key == KeyCode.None && Axis == null;
+
         public override string ToString()
         {
             if (Key != KeyCode.None)

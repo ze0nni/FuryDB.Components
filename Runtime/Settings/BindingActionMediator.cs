@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using UnityEngine;
 
 namespace FDB.Components.Settings
@@ -9,11 +11,6 @@ namespace FDB.Components.Settings
     [DefaultExecutionOrder(-100)]
     public sealed class BindingActionMediator : MonoBehaviour
     {
-        private void OnEnable()
-        {
-            Debug.Log(string.Join(",", Input.GetJoystickNames()));
-        }
-
         struct State
         {
             public Func<BindingAction> Getter;
@@ -24,6 +21,10 @@ namespace FDB.Components.Settings
         int _triggersCount;
         State[] _axis = new State[128];
         int _axisCount;
+
+        int _joysticsCount = 0;
+
+        readonly Dictionary<string, bool> _excludeAxis = new Dictionary<string, bool>();
 
         internal void Listen(FieldInfo fieldInfo)
         {
@@ -59,7 +60,8 @@ namespace FDB.Components.Settings
                         Debug.LogWarning($"Unknown  type {type}");
                         break;
                 }
-            } catch (Exception exc)
+            }
+            catch (Exception exc)
             {
                 Debug.LogError($"Error when create listener of {fieldInfo.Name}");
                 Debug.LogException(exc);
@@ -78,6 +80,12 @@ namespace FDB.Components.Settings
 
         private void Update()
         {
+            if (_excludeAxis.Count == 0 || _joysticsCount != Input.GetJoystickNames().Length)
+            {
+                _joysticsCount = Input.GetJoystickNames().Length;
+                UpdateDefaultAxis();
+            }
+
             for (var i = 0; i < _triggersCount; i++)
             {
                 ref var state = ref _triggers[i];
@@ -117,11 +125,30 @@ namespace FDB.Components.Settings
             if (t.Key != KeyCode.None)
             {
                 return Input.GetKey(t.Key);
-            } else if (t.Axis != null && false)
+            }
+            else if (t.Axis != null && false)
             {
-                return Input.GetAxis(t.Axis) * (t.AxisPositive ? 1 : -1) > 0.25f;
+                return GetAxis(t.Axis) * (t.AxisPositive ? 1 : -1) > 0.25f;
             }
             return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        float GetAxis(string name)
+        {
+            if (_excludeAxis.TryGetValue(name, out var e) && e)
+            {
+                return 0;
+            }
+            return Input.GetAxis(name);
+        }
+
+        void UpdateDefaultAxis()
+        {
+            foreach (var a in SettingsController.DefaultAxis)
+            {
+                _excludeAxis[a] = Input.GetAxis(a) != 0;
+            }
         }
     }
 }

@@ -1,11 +1,52 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace FDB.Components.Settings
 {
     public sealed partial class SettingsController
     {
+        internal static readonly string[] DefaultAxis = new string[]
+        {
+            "MouseX",
+            "MouseY",
+            "JoyX",
+            "JoyY",
+            "Joy3",
+            "Joy4",
+            "Joy5",
+            "Joy6",
+            "Joy7",
+            "Joy8",
+            "Joy9",
+            "Joy10",
+            "Joy11",
+            "Joy12",
+            "Joy13",
+            "Joy14",
+            "Joy15",
+            "Joy16",
+            "Joy17",
+            "Joy18",
+            "Joy19",
+            "Joy20",
+            "Joy21",
+            "Joy22",
+            "Joy23",
+            "Joy24",
+            "Joy25",
+            "Joy26",
+            "Joy27",
+            "Joy28"
+        };
+
+        internal static KeyCode[] DefaultKeyCodes = Enum
+            .GetValues(typeof(KeyCode))
+            .Cast<KeyCode>()
+            .Where(c => c != KeyCode.None && (!c.ToString().StartsWith("Joystick") || c.ToString().StartsWith("JoystickButton")))
+            .ToArray();
+
         internal static IReadOnlyList<ISettingsKeyFactory> DefaultKeyFactories = new ISettingsKeyFactory[] {
             new SettingsKey.EnumKeyFactory(),
             new SettingsKey.NumberKeyFactory(),

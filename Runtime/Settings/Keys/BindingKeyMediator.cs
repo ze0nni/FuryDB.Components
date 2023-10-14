@@ -26,7 +26,7 @@ namespace FDB.Components.Settings
 
         readonly Dictionary<string, bool> _excludeAxis = new Dictionary<string, bool>();
 
-        internal void Listen(FieldInfo fieldInfo)
+        internal void ListenBindingKey(FieldInfo fieldInfo)
         {
             try
             {
@@ -46,20 +46,7 @@ namespace FDB.Components.Settings
                     Getter = getter,
                     Setter = setter
                 };
-
-                var type = getter().Type;
-                switch (type)
-                {
-                    case BindingActionType.Trigger:
-                        Append(ref _triggersCount, ref _triggers, in state);
-                        break;
-                    case BindingActionType.Axis:
-                        Append(ref _axisCount, ref _axis, in state);
-                        break;
-                    default:
-                        Debug.LogWarning($"Unknown  type {type}");
-                        break;
-                }
+                Append(ref _triggersCount, ref _triggers, in state);
             }
             catch (Exception exc)
             {
@@ -89,14 +76,14 @@ namespace FDB.Components.Settings
             for (var i = 0; i < _triggersCount; i++)
             {
                 ref var state = ref _triggers[i];
-                var a = state.Getter();
+                var b = state.Getter();
                 var changed = false;
 
                 var pressed = false;
-                var lastPressed = a._presset;
-                for (var ti = 0; ti < a.Triggers.Length; ti++)
+                var lastPressed = b._presset;
+                for (var ti = 0; ti < b.Triggers.Length; ti++)
                 {
-                    if (GetPressed(ref a.Triggers[ti]))
+                    if (GetPressed(ref b.Triggers[ti]))
                     {
                         pressed = true;
                         break;
@@ -106,15 +93,15 @@ namespace FDB.Components.Settings
                 var justReleased = lastPressed && !pressed;
 
                 changed = pressed != lastPressed
-                    || justPressed != a._justPressed
-                    || justReleased != a._justReleased;
+                    || justPressed != b._justPressed
+                    || justReleased != b._justReleased;
 
                 if (changed)
                 {
-                    a._presset = pressed;
-                    a._justPressed = justPressed;
-                    a._justReleased = justReleased;
-                    state.Setter(a);
+                    b._presset = pressed;
+                    b._justPressed = justPressed;
+                    b._justReleased = justReleased;
+                    state.Setter(b);
                 }
             }
         }

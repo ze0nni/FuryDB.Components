@@ -37,7 +37,7 @@ namespace FDB.Components.Settings
                 var mediator = context.PrimaryRegistry.GetOrCreate(
                     null,
                     () => group.Page.PrimaryGameObject.AddComponent<BindingKeyMediator>());
-                mediator.Listen(keyField);
+                mediator.ListenBindingKey(keyField);
             }
         }
 

@@ -6,13 +6,6 @@ using UnityEngine;
 
 namespace FDB.Components.Settings
 {
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum BindingActionType
-    {
-        Trigger,
-        Axis
-    }
-
     public struct ActionTrigger
     {
         [JsonConverter(typeof(StringEnumConverter))]
@@ -94,15 +87,11 @@ namespace FDB.Components.Settings
         public static BindingAction Of(params ActionTrigger[] triggers)
         {
             var b = new BindingAction();
-            b.Type = BindingActionType.Trigger;
             b.Triggers = triggers;
             return b;
         }
 
-        public BindingActionType Type;
-
         public ActionTrigger[] Triggers;
-        public string[] Axis;
 
         internal bool _presset;
         internal bool _justPressed;
@@ -111,26 +100,21 @@ namespace FDB.Components.Settings
         [JsonIgnore] public bool JustPressed => _justPressed;
         [JsonIgnore] public bool JustReleased => _justReleased;
 
-        float _value;
-        [JsonIgnore] public float Value => _value;
-
         public bool Equals(BindingAction other)
         {
-            return Type == other.Type
-                && (object.ReferenceEquals(Triggers, other.Triggers) || Enumerable.SequenceEqual(Triggers, other.Triggers))
-                && (object.ReferenceEquals(Axis, other.Axis) || Enumerable.SequenceEqual(Axis, other.Axis));
+            return (object.ReferenceEquals(Triggers, other.Triggers) 
+                || Enumerable.SequenceEqual(Triggers, other.Triggers));
 
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, Triggers, Axis);
+            return HashCode.Combine(Triggers);
         }
 
         public static BindingAction FromTriggers(params ActionTrigger[] triggers)
         {
             var b = new BindingAction();
-            b.Type = BindingActionType.Trigger;
             b.Triggers = triggers;
             return b;
         }
@@ -146,20 +130,11 @@ namespace FDB.Components.Settings
         }
 
         public static BindingAction operator +(BindingAction def, BindingAction curr) {
-            if (def.Type != curr.Type)
-            {
-                return (BindingAction)def.Clone();
-            }
             curr = (BindingAction)curr.Clone();
-            if (def.Type == BindingActionType.Trigger)
-            {
-                Merge(ref curr.Triggers, ref def.Triggers, t =>
-                    t.Key == KeyCode.None && string.IsNullOrEmpty(t.Axis));
-            } else
-            {
-                Merge(ref curr.Axis, ref def.Axis,
-                    string.IsNullOrEmpty);
-            }
+            
+            
+            Merge(ref curr.Triggers, ref def.Triggers, t => t.IsNull);
+            
             return curr;
 
             void Merge<T>(ref T[] currA, ref T[] defA, Predicate<T> isNull)
@@ -194,18 +169,14 @@ namespace FDB.Components.Settings
 
         public override string ToString()
         {
-            var args = Type == BindingActionType.Trigger
-                ? (Triggers == null ? "null" : string.Join(", ", Triggers))
-                : (Axis == null ? "null" : string.Join(", ", Axis));
-            return $"BindingAction({Type}, { args })";
+            var args = Triggers == null ? "null" : string.Join(", ", Triggers);
+            return $"BindingAction({ args })";
         }
 
         public object Clone()
         {
             var b = new BindingAction();
-            b.Type = Type;
             b.Triggers = Triggers?.ToArray();
-            b.Axis = Axis?.ToArray();
             return b;
         }
     }

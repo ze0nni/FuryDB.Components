@@ -212,9 +212,16 @@ namespace FDB.Components.Settings
     {
         private TValue _value;
 
+        protected TValue OriginValue => _value;
         public TValue Value
         {
-            get => _value;
+            get {
+                if (_value is ICloneable clonable)
+                {
+                    return (TValue)clonable.Clone();
+                }
+                return _value;
+            }
             set
             {
                 if (object.ReferenceEquals(_value, value))
@@ -229,7 +236,10 @@ namespace FDB.Components.Settings
                 {
                     throw new ArgumentException($"Invalid value \"{value}\" for key {Id}");
                 }
-
+                if (value is ICloneable cloneable)
+                {
+                    value = (TValue)cloneable.Clone();
+                }
                 _value = value;
                 UpdateStringValue();
                 NotifyKeyChanged();

@@ -64,16 +64,30 @@ namespace FDB.Components.Settings
                 OnClose = onClose,
                 GetSize = () =>
                 {
-                    var fieldRect = GUIUtility.ScreenToGUIRect(fieldScreenRect);
-                    var w = fieldRect.width;
-                    var h = maxHeight == 0 ? GetContentHeight() : MathF.Min(maxHeight, GetContentHeight());
-                    var rect = new Rect(fieldRect.x, fieldRect.yMax, w, h);
-                    if (rect.yMax <= state.ScreenHeight)
-                    {
+                    {/* ScreenToGUIRect work wrong
+                        var fieldRect = GUIUtility.ScreenToGUIRect(fieldScreenRect);
+
+                        var w = fieldRect.width;
+                        var h = maxHeight == 0 ? GetContentHeight() : MathF.Min(maxHeight, GetContentHeight());
+                        var rect = new Rect(fieldRect.x, fieldRect.yMax, w, h);
+                        if (rect.yMax <= state.ScreenHeight)
+                        {
+                            return rect;
+                        }
+                        rect.y = fieldRect.y - h;
                         return rect;
+                    */
                     }
-                    rect.y = fieldRect.y - h;
-                    return rect;
+                    {// Temporary
+                        var fieldRect = GUIUtility.ScreenToGUIRect(fieldScreenRect);
+                        var w = fieldRect.width;
+                        var h = maxHeight == 0 ? GetContentHeight() : MathF.Min(maxHeight, GetContentHeight());
+                        return new Rect(
+                            (state.ScreenWidth - w) / 2,
+                            (state.ScreenHeight - h) / 2,
+                            w,
+                            h);
+                    }
                 }
             });
         }

@@ -13,7 +13,7 @@ namespace FDB.Components.Settings
         public Func<Rect> GetSize;
     }
 
-    public sealed partial class SettingsPageGUI<TKeysData>
+    internal sealed partial class SettingsGUI<TKeysData>
     {
         GuiWindow? _window;
 

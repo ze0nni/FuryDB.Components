@@ -14,7 +14,7 @@ namespace FDB.Components.Settings
         private readonly ISettingsHash _hash;
         private readonly string _hashSalt;
         private readonly Action _onChangedCallback;
-        private readonly SettingsPage<VoidSettingsKeyData> _primaryPage;
+        private readonly SettingsPage<DefaultKeyData> _primaryPage;
 
         public string UserId { get; private set; } = "";
         public string HashedUserId { get; private set; } = "";
@@ -44,7 +44,7 @@ namespace FDB.Components.Settings
             _storage = storage;
             _hash = hash;
             _onChangedCallback = OnApplySettingsAttribute.ResolveCallback(settingsType);
-            _primaryPage = new SettingsPage<VoidSettingsKeyData>(true, this);
+            _primaryPage = new SettingsPage<DefaultKeyData>(true, this);
             _primaryPage.Setup();
             if (userId != null)
             {
@@ -52,9 +52,9 @@ namespace FDB.Components.Settings
             }
         }
 
-        public SettingsPage<VoidSettingsKeyData> NewPage()
+        public SettingsPage<DefaultKeyData> NewPage()
         {
-            return NewPage<VoidSettingsKeyData>();
+            return NewPage<DefaultKeyData>();
         }
 
         public SettingsPage<TKeyData> NewPage<TKeyData>()

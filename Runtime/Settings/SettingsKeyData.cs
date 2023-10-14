@@ -11,7 +11,7 @@ namespace FDB.Components.Settings
         void Setup(SettingsGroup group, HeaderAttribute header, ICustomAttributeProvider attributeProvider);
     }
 
-    public class VoidSettingsKeyData : ISettingsKeyData
+    public class DefaultKeyData : ISettingsKeyData
     {
         public string Name { get; private set; }
 

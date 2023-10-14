@@ -10,6 +10,8 @@ namespace FDB.Components.Settings
         Screen
     }
 
+    internal delegate void GetGUISeize(out Matrix4x4 matrix, out Vector2 screenSize, out Rect pageSize);
+
     public interface ISettingsGUIState
     {
         GUIMode Mode { get; }
@@ -27,13 +29,15 @@ namespace FDB.Components.Settings
         event Action OnUpdate;
     }
 
-    public sealed partial class SettingsPageGUI<TKeysData> : ISettingsGUIState
+    internal sealed partial class SettingsGUI<TKeysData> : ISettingsGUIState
         where TKeysData : ISettingsKeyData
     {
         private readonly SettingsPage<TKeysData> _page;
         private readonly GUIContent[] _groupNames;
 
         readonly GUIMode _mode;
+        readonly GetGUISeize _getGuiSize;
+        readonly Action _onClose;
         readonly Action _repaint;
 
         GUIMode ISettingsGUIState.Mode => _mode;
@@ -55,20 +59,22 @@ namespace FDB.Components.Settings
         public event Action<Event> OnGUIEvent;
         public event Action OnUpdate;
 
-        public event Action OnCloseClick;
-
         void ISettingsGUIState.Repaint()
         {
             _repaint?.Invoke();
         }
 
-        public SettingsPageGUI(
+        public SettingsGUI(
             GUIMode mode,
             SettingsController controler,
+            GetGUISeize getGuiSize,
+            Action onClose,
             Action repaint)
         {
             _mode = mode;
             _repaint = repaint;
+            _onClose = onClose;
+            _getGuiSize = getGuiSize;
             _page = controler.NewPage<TKeysData>();
             _groupNames = _page.Groups.Select(x => new GUIContent(x.Name)).ToArray();
         }
@@ -87,55 +93,24 @@ namespace FDB.Components.Settings
         public void OnGUI()
         {
             OnGUIEvent?.Invoke(Event.current);
-
-            switch (_mode)
-            {
-                case GUIMode.Editor:
-                    {
-                        _screenWidth = Screen.width;
-                        _screenHeight = Screen.height;
-                        _x = 0;
-                        _y = 0;
-                        _width = Screen.width;
-                        _height = Screen.height;
-                        _rowHeight = GUI.skin.button.CalcHeight(GUIContent.none, 8);
-                        _height -= _rowHeight * 2; // hack
-                    }
-                    break;
-                case GUIMode.Screen:
-                    {
-                        _screenWidth = Screen.width;
-                        _screenHeight = Screen.height;
-                        _x = Screen.width / 4;
-                        _y = Screen.height / 8;
-                        _width = Screen.width / 2;
-                        _height = Screen.height - (Screen.height / 4);
-                        _rowHeight = GUI.skin.button.CalcHeight(GUIContent.none, 8);
-                    }
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(_mode));
-            }
+            _getGuiSize.Invoke(out var matrix, out var screenSize, out var pageRect);
+            GUI.matrix = matrix;
+            _screenWidth = screenSize.x;
+            _screenHeight = screenSize.y;
+            _x = pageRect.x;
+            _y = pageRect.y;
+            _width = pageRect.width;
+            _height = pageRect.height;
+            _rowHeight = GUI.skin.button.CalcHeight(GUIContent.none, 8);
 
             OnWindowBefore();
-            if (_mode == GUIMode.Screen)
+            using (new GUILayout.AreaScope(pageRect))
             {
-                GUILayout.BeginArea(new Rect(
-                        _x,
-                        _y,
-                        _width,
-                        _height));
+                OnGroupsGUILayout();
+                OnGroupKeysGUILayout(this, SelectedGroup, _width);
+                OnPageActionsGUILayout();
             }
-
-            OnGroupsGUILayout();
-            OnGroupKeysGUILayout(this, SelectedGroup, _width);
-            OnPageActionsGUILayout();
-
-            if (_mode == GUIMode.Screen)
-            {
-                GUILayout.EndArea();
-            }
-                OnWindowAfter();
+            OnWindowAfter();
         }
 
         private void OnGroupsGUILayout()
@@ -215,9 +190,9 @@ namespace FDB.Components.Settings
                 {
                     _page.ResetDefault();
                 }
-                if (GUILayout.Button("Close"))
+                if (_onClose != null && GUILayout.Button("Close"))
                 {
-                    OnCloseClick?.Invoke();
+                    _onClose.Invoke();
                 }
             }
             GUI.enabled = enabledRev;

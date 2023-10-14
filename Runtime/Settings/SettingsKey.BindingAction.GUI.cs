@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace FDB.Components.Settings
@@ -11,31 +10,33 @@ namespace FDB.Components.Settings
         {
             protected internal override void OnFieldGUI(ISettingsGUIState state, float containerWidth)
             {
-                switch (Value.Type)
+                switch (OriginValue.Type)
                 {
                     case BindingActionType.Trigger:
-                        OnTriggerGUI(state, Value);
+                        OnTriggerGUI(state, OriginValue);
                         break;
 
                 }
             }
 
-            private void OnTriggerGUI(ISettingsGUIState state, BindingAction a)
+            private void OnTriggerGUI(ISettingsGUIState state, BindingAction newValue)
             {
-                if (a.Triggers == null)
+                if (newValue.Triggers == null)
                 {
                     return;
                 }
 
                 var i = 0;
-                foreach (var t in a.Triggers)
+                foreach (var t in newValue.Triggers)
                 {
                     var index = i++;
                     if (GUILayout.Button(t.ToString()))
                     {
                         var handle = ReadTrigger(state, state.CloseWindow, newT =>
                         {
-                            a.Triggers[index] = newT;
+                            newValue = Value;
+                            newValue.Triggers[index] = newT;
+                            Value = newValue;
                             state.CloseWindow();
                         });
 

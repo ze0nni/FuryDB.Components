@@ -48,10 +48,10 @@ namespace FDB.Components.Settings
             .ToArray();
 
         internal static IReadOnlyList<ISettingsKeyFactory> DefaultKeyFactories = new ISettingsKeyFactory[] {
-            new SettingsKey.EnumKeyFactory(),
-            new SettingsKey.NumberKeyFactory(),
-            new SettingsKey.ToggleFactory(),
-            new SettingsKey.BindingActionFactory(),
+            new EnumKeyFactory(),
+            new NumberKeyFactory(),
+            new ToggleFactory(),
+            new BindingFactory(),
         };
 
         private static readonly List<ISettingsKeyFactory> _userKeyFactories = new List<ISettingsKeyFactory>();

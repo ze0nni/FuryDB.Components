@@ -93,7 +93,7 @@ namespace FDB.Components.Settings
                 var attr = keyField.GetCustomAttribute<HeaderAttribute>();
                 if (attr != null)
                 {
-                    headerKey = new SettingsKey.Header<TKeyData>(group, attr, keyField);
+                    headerKey = new HeaderKey<TKeyData>(group, attr, keyField);
                 }
             }
 

@@ -9,7 +9,7 @@ using UnityEngine;
 namespace FDB.Components.Settings
 {
     [DefaultExecutionOrder(-100)]
-    public sealed class BindingActionMediator : MonoBehaviour
+    public sealed class BindingKeyMediator : MonoBehaviour
     {
         struct State
         {

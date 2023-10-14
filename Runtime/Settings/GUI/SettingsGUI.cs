@@ -149,7 +149,7 @@ namespace FDB.Components.Settings
                     {
                         continue;
                     }
-                    if (key is SettingsKey.Header<TKeysData> headerkey)
+                    if (key is HeaderKey<TKeysData> headerkey)
                     {
                         GUI.enabled = enabledRev;
                         GUILayout.Box(headerkey.Data.Name, GUILayout.ExpandWidth(true));

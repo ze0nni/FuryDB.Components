@@ -33,7 +33,6 @@ namespace FDB.Components.Settings
         where TKeysData : ISettingsKeyData
     {
         private readonly SettingsPage<TKeysData> _page;
-        private readonly GUIContent[] _groupNames;
 
         readonly GUIMode _mode;
         readonly GetGUISeize _getGuiSize;
@@ -76,7 +75,6 @@ namespace FDB.Components.Settings
             _onClose = onClose;
             _getGuiSize = getGuiSize;
             _page = controler.NewPage<TKeysData>();
-            _groupNames = _page.Groups.Select(x => new GUIContent(x.Name)).ToArray();
         }
 
         public void Update()
@@ -84,14 +82,28 @@ namespace FDB.Components.Settings
             OnUpdate?.Invoke();
         }
 
-        int _selectedGroup;
+        string[] _visibleGroupsNames;
+        string _selectedGroup;
         Vector2 _scrollPosition;
-        SettingsGroup<TKeysData> SelectedGroup => _selectedGroup < 0 || _selectedGroup >= _groupNames.Length
-            ? null
-            : _page.Groups[_selectedGroup];
+        SettingsGroup<TKeysData> SelectedGroup
+        {
+            get {
+                string name;
+                if (_visibleGroupsNames.Contains(_selectedGroup))
+                {
+                    name = _selectedGroup;
+                } else
+                {
+                    name = _visibleGroupsNames[0];
+                }
+                return _page.Groups.First(g => g.Name == name);
+            }
+        }
 
         public void OnGUI()
         {
+            _visibleGroupsNames = _page.Groups.Where(x => x.Visible).Select(x => x.Name).ToArray();
+
             OnGUIEvent?.Invoke(Event.current);
             _getGuiSize.Invoke(out var matrix, out var screenSize, out var pageRect);
             GUI.matrix = matrix;
@@ -115,16 +127,19 @@ namespace FDB.Components.Settings
 
         private void OnGroupsGUILayout()
         {
-            if (_groupNames.Length == 0)
+            if (_visibleGroupsNames.Length == 0)
             {
                 return;
             }
-
-            _selectedGroup = Mathf.Clamp(_selectedGroup, 0, _groupNames.Length - 1);
-            var newPageIndex = GUILayout.Toolbar(_selectedGroup, _groupNames);
-            if (newPageIndex != _selectedGroup)
+            if (!_visibleGroupsNames.Contains(_selectedGroup))
             {
-                _selectedGroup = newPageIndex;
+                _selectedGroup = _visibleGroupsNames[0];
+            }
+            var index = Array.IndexOf(_visibleGroupsNames, _selectedGroup);
+            var newIndex = GUILayout.Toolbar(index, _visibleGroupsNames);
+            if (index != newIndex)
+            {
+                _selectedGroup = _visibleGroupsNames[newIndex];
                 GUI.changed = true;
             }
         }

@@ -21,6 +21,13 @@ namespace FDB.Components.Settings
         public readonly Op Op;
         public readonly string[] KeyValues;
 
+        public SettingsPredicateAttribute(string group, string key, Op op, params string[] values)
+        {
+            KeyId = $"{group}.{key}";
+            Op = op;
+            KeyValues = values;
+        }
+
         public SettingsPredicateAttribute(string key, Op op, params string[] values)
         {
             KeyId = key;
@@ -29,7 +36,6 @@ namespace FDB.Components.Settings
         }
 
         public static SettingsKey.DisplayPredecateDelegate Resolve<T>(
-            Type groupType,
             ICustomAttributeProvider provider)
             where T : SettingsPredicateAttribute
         {
@@ -82,7 +88,7 @@ namespace FDB.Components.Settings
 
         private static SettingsKey.DisplayPredecateDelegate IsTrue(string id)
         {
-            return (page, _) =>
+            return (page) =>
             {
                 var value = page.GetKey(id).StringValue;
                 return value == "true" || value == "True";
@@ -91,7 +97,7 @@ namespace FDB.Components.Settings
 
         private static SettingsKey.DisplayPredecateDelegate IsFalse(string id)
         {
-            return (page, _) =>
+            return (page) =>
             {
                 var value = page.GetKey(id).StringValue;
                 return value != "true" && value != "True";
@@ -104,7 +110,7 @@ namespace FDB.Components.Settings
             {
                 throw new ArgumentException("Values lists excepted");
             }
-            return (page, _) =>
+            return (page) =>
             {
                 var value = page.GetKey(id).StringValue;
                 return Array.IndexOf(values, value) != -1;
@@ -117,7 +123,7 @@ namespace FDB.Components.Settings
             {
                 throw new ArgumentException("Values lists excepted");
             }
-            return (page, _) =>
+            return (page) =>
             {
                 var value = page.GetKey(id).StringValue;
                 return Array.IndexOf(values, value) == -1;
@@ -133,7 +139,7 @@ namespace FDB.Components.Settings
             {
                 throw new ArgumentException("Excepted two number values");
             }
-            return (page, _) =>
+            return (page) =>
             {
                 var value = float.Parse(page.GetKey(id).StringValue);
                 return value >= min && value <= max;

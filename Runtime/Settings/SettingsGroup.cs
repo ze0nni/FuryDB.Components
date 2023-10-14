@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using UnityEngine;
+using static FDB.Components.Settings.SettingsKey;
 
 namespace FDB.Components.Settings
 {
@@ -12,6 +12,11 @@ namespace FDB.Components.Settings
         public readonly SettingsPage Page;
         public readonly Type GroupType;
         public readonly Registry Registry = new Registry();
+
+        bool _visible = true;
+        public bool Visible => _visible;
+
+        internal readonly DisplayPredecateDelegate _visiblePredicate;
 
         private bool _isDirtyKeys;
         internal void MarkKeysDirty() => _isDirtyKeys = true;
@@ -51,6 +56,7 @@ namespace FDB.Components.Settings
         }
 
         public bool IsChanged { get; private set; }
+        public event Action OnChanged;
         public event Action<SettingsKey> OnKeyChanged;
 
         internal SettingsGroup(SettingsPage page, Type groupType)
@@ -58,6 +64,7 @@ namespace FDB.Components.Settings
             Name = groupType.Name;
             Page = page;
             GroupType = groupType;
+            _visiblePredicate = SettingsPredicateAttribute.Resolve<SettingsVisibleAttribute>(groupType);
         }
 
         protected void SetKeys(IEnumerable<SettingsKey> keys)
@@ -74,6 +81,17 @@ namespace FDB.Components.Settings
             }
             OnKeyChanged?.Invoke(key);
             Page.NotifyKeyChanged(key);
+        }
+
+        internal protected virtual void UpdateDisplayState()
+        {
+            var visible = _visiblePredicate == null ? true : _visiblePredicate(this);
+            if (_visible == visible)
+            {
+                return;
+            }
+            _visible = visible;
+            OnChanged?.Invoke();
         }
 
         internal void NotifySave()

@@ -74,8 +74,21 @@ namespace FDB.Components.Settings
             foreach (var g in Groups)
             {
                 g.MarkKeysDirty();
+                g.UpdateDisplayState();
             }
             OnKeyChanged?.Invoke(key);
+        }
+
+        public void UpdateDisplayState()
+        {
+            foreach (var g in Groups)
+            {
+                g.UpdateDisplayState();
+                foreach (var k in g.Keys)
+                {
+                    k.UpdateDisplayState(g);
+                }
+            }
         }
 
         internal void NotifySave()

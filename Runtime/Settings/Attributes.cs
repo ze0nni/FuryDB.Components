@@ -256,10 +256,14 @@ namespace FDB.Components.Settings
         }
     }
 
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = false)]
     public sealed class SettingsVisibleAttribute : SettingsPredicateAttribute
     {
         public SettingsVisibleAttribute(string key, Op op, params string[] values) : base(key, op, values)
+        {
+        }
+
+        public SettingsVisibleAttribute(string group, string key, Op op, params string[] values) : base(group, key, op, values)
         {
         }
     }

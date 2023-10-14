@@ -61,8 +61,8 @@ namespace FDB.Components.Settings
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal protected virtual void UpdateDisplayState(SettingsGroup group)
         {
-            var enabled = _enabledPredicate == null ? true : _enabledPredicate(group, this);
-            var visible = _visiblePredicate == null ? true : _visiblePredicate(group, this);
+            var enabled = _enabledPredicate == null ? true : _enabledPredicate(group);
+            var visible = _visiblePredicate == null ? true : _visiblePredicate(group);
             if (_enabled == enabled && _visible == visible)
             {
                 return;
@@ -85,7 +85,7 @@ namespace FDB.Components.Settings
         public bool IsChanged { get; private set; }
         public event Action<SettingsKey> OnKeyChanged;
 
-        public delegate bool DisplayPredecateDelegate(SettingsGroup group, SettingsKey key);
+        public delegate bool DisplayPredecateDelegate(SettingsGroup group);
 
         internal readonly DisplayPredecateDelegate _enabledPredicate;
         internal readonly DisplayPredecateDelegate _visiblePredicate;
@@ -100,9 +100,9 @@ namespace FDB.Components.Settings
             KeyField = keyField;
             KeyAttributesProvider = keyField;
             _enabledPredicate = SettingsPredicateAttribute
-                .Resolve<SettingsEnabledAttribute>(group.GroupType, keyField);
+                .Resolve<SettingsEnabledAttribute>(keyField);
             _visiblePredicate = SettingsPredicateAttribute
-                .Resolve<SettingsVisibleAttribute>(group.GroupType, keyField);
+                .Resolve<SettingsVisibleAttribute>(keyField);
             if (Type == Settings.KeyType.Key)
             {
                 DefaultKeys.Store(this);
@@ -119,7 +119,7 @@ namespace FDB.Components.Settings
             KeyAttributesProvider = keyAttributesProvider;
             HeaderAttr = header;
             _visiblePredicate = SettingsPredicateAttribute
-                .Resolve<SettingsVisibleAttribute>(group.GroupType, keyAttributesProvider);
+                .Resolve<SettingsVisibleAttribute>(keyAttributesProvider);
         }
 
         protected virtual void NotifyKeyChanged()

@@ -187,7 +187,7 @@ namespace FDB.Components.Settings
 
         protected internal virtual void OnGUI(ISettingsGUIState state, float containerWidth)
         {
-            GUILayout.Label(Data.Name, GUILayout.Width(state.Width / 2));
+            GUILayout.Label(Data.Name, GUILayout.Width(state.Width / 3));
 
             Rect labelRect = default;
             if (Event.current.type == EventType.Repaint)

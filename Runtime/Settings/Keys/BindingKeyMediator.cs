@@ -126,7 +126,7 @@ namespace FDB.Components.Settings
             {
                 return Input.GetKey(t.Key);
             }
-            else if (t.Axis != null && false)
+            else if (t.Axis != null)
             {
                 return GetAxis(t.Axis) * (t.AxisPositive ? 1 : -1) > 0.25f;
             }

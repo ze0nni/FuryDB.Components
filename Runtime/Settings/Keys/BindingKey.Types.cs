@@ -82,8 +82,8 @@ namespace FDB.Components.Settings
 
     public struct BindingAction : IEquatable<BindingAction>, ICloneable
     {
-        public static BindingAction KeyMoveUp => Of(KeyCode.W, "+JoyY");
-        public static BindingAction KeyMoveDown => Of(KeyCode.S, "-JoyY");
+        public static BindingAction KeyMoveUp => Of(KeyCode.W, "-JoyY");
+        public static BindingAction KeyMoveDown => Of(KeyCode.S, "+JoyY");
         public static BindingAction KeyMoveLeft => Of(KeyCode.A, "-JoyX");
         public static BindingAction KeyMoveRight => Of(KeyCode.D, "+JoyX");
         public static BindingAction KeyFire => Of(KeyCode.Mouse0, KeyCode.Joystick1Button0);

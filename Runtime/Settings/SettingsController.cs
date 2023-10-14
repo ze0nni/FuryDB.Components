@@ -14,6 +14,7 @@ namespace FDB.Components.Settings
         private readonly ISettingsHash _hash;
         private readonly string _hashSalt;
         private readonly Action _onChangedCallback;
+        public readonly Registry Registry;
         private readonly SettingsPage<DefaultKeyData> _primaryPage;
 
         public string UserId { get; private set; } = "";
@@ -44,6 +45,7 @@ namespace FDB.Components.Settings
             _storage = storage;
             _hash = hash;
             _onChangedCallback = OnApplySettingsAttribute.ResolveCallback(settingsType);
+            Registry = new Registry();
             _primaryPage = new SettingsPage<DefaultKeyData>(true, this);
             _primaryPage.Setup();
             if (userId != null)

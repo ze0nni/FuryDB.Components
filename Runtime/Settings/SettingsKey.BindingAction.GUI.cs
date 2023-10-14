@@ -61,7 +61,8 @@ namespace FDB.Components.Settings
 
             public ReadActionHandle ReadTrigger(ISettingsGUIState state, int triggerIndex, Action close)
             {
-                return new ReadActionHandle(state, close, (ActionTrigger t)  =>
+                var mediator = Group.Page.Controller.Registry.Get<BindingActionMediator>();
+                return new ReadActionHandle(mediator, state, close, (ActionTrigger t)  =>
                 {
                     var value = Value;
                     value.Triggers[triggerIndex] = t;
@@ -71,7 +72,8 @@ namespace FDB.Components.Settings
 
             public ReadActionHandle ReadAxis(ISettingsGUIState state, int axisIndex, Action close)
             {
-                return new ReadActionHandle(state, close, (string a) =>
+                var mediator = Group.Page.Controller.Registry.Get<BindingActionMediator>();
+                return new ReadActionHandle(mediator, state, close, (string a) =>
                 {
                 });
             }
@@ -81,26 +83,29 @@ namespace FDB.Components.Settings
     public class ReadActionHandle : IDisposable
     {
         public readonly BindingActionType Type;
+        readonly BindingActionMediator _mediator;
         readonly ISettingsGUIState _state;
         Action _close;
         readonly Action<ActionTrigger> _triggerCallback;
         readonly Action<string> _axisCallback;
 
-        ActionTrigger? _first;
-        public ActionTrigger? First => _first;
+        private KeyCode? _firstKey;
+        public KeyCode? First => _firstKey;
 
-        internal ReadActionHandle(ISettingsGUIState state, Action close, Action<ActionTrigger> callback)
+        internal ReadActionHandle(BindingActionMediator mediator, ISettingsGUIState state, Action close, Action<ActionTrigger> callback)
         {
             Type = BindingActionType.Trigger;
+            _mediator = mediator;
             _state = state;
             _close = close;
             _triggerCallback = callback;
             Listen();
         }
 
-        internal ReadActionHandle(ISettingsGUIState state, Action close, Action<string> callback)
+        internal ReadActionHandle(BindingActionMediator mediator, ISettingsGUIState state, Action close, Action<string> callback)
         {
             Type = BindingActionType.Axis;
+            _mediator = mediator;
             _state = state;
             _close = close;
             _axisCallback = callback;
@@ -115,11 +120,11 @@ namespace FDB.Components.Settings
 
         void OnUpdate()
         {
-            if (_state.Mode == GUIMode.Screen)
+            if (_state.Mode == GUIMode.Screen )
             {
-                if (Input.anyKey)
+                if (Type == BindingActionType.Trigger && _mediator.ReadTrigger(out var t))
                 {
-                    
+                    Perform(t);
                 }
             }
         }
@@ -138,21 +143,19 @@ namespace FDB.Components.Settings
 
         void Perform(ActionTrigger t)
         {
-            if (_first == null)
+            if (t.Key == KeyCode.Escape && _firstKey == null)
             {
-                _first = t;
-                _state.Repaint();
-            } else
+                _firstKey = t.Key;
+            }
+            else if (t.Key == KeyCode.Escape && _firstKey == KeyCode.Escape)
             {
-                if (_first.Value == t)
-                {
-                    Dispose();
-                    _triggerCallback(t);
-                } else
-                {
-                    _first = null;
-                    _state.Repaint();
-                }
+                Dispose();
+                _triggerCallback(t);
+            }
+            else
+            {
+                Dispose();
+                _triggerCallback(t);
             }
         }
 

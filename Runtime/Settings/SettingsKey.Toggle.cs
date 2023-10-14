@@ -32,7 +32,7 @@ namespace FDB.Components.Settings
                 var groupAttr = keyField.GetCustomAttribute<ToggleGroupAttribute>();
                 var toggleGroup = groupAttr?.GroupName == null
                     ? null
-                    : context.Local.GetOrCreate<ToggleGroup<TKeyData>>(
+                    : context.GropuRegistry.GetOrCreate<ToggleGroup<TKeyData>>(
                         groupAttr.GroupName, 
                         () => new ToggleGroup<TKeyData>(groupAttr?.GroupName));
 

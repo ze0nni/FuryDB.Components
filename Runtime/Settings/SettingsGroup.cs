@@ -129,7 +129,7 @@ namespace FDB.Components.Settings
 
         internal void Setup()
         {
-            var context = new KeyContext(Page.Registrty, Registry);
+            var context = new KeyContext(Page.Controller.Registry, Page.Registrty, Registry);
             var keys = new List<SettingsKey<TKeyData>>();
             foreach (var field in GroupType.GetFields())
             {

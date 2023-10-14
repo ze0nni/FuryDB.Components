@@ -18,7 +18,7 @@ namespace FDB.Components.Settings
                 {
                     return null;
                 }
-                return new BindingAction<TKeyData>(group, keyField);
+                return new BindingAction<TKeyData>(context, group, keyField);
             }
         }
 
@@ -26,16 +26,16 @@ namespace FDB.Components.Settings
             where TKeyData : ISettingsKeyData
         {
             internal BindingAction(
+                KeyContext context,
                 SettingsGroup<TKeyData> group,
                 FieldInfo keyField
                 ) : base(group, keyField)
             {
                 if (group.Page.PrimaryGameObject != null)
                 {
-                    if (!group.Page.PrimaryGameObject.TryGetComponent<BindingActionMediator>(out var mediator))
-                    {
-                        mediator = group.Page.PrimaryGameObject.AddComponent<BindingActionMediator>();
-                    }
+                    var mediator = context.PrimaryRegistry.GetOrCreate(
+                        null, 
+                        () => group.Page.PrimaryGameObject.AddComponent<BindingActionMediator>());
                     mediator.Listen(keyField);
                 }
             }

@@ -12,12 +12,17 @@ namespace FDB.Components.Settings
 {
     public sealed class KeyContext
     {
-        public readonly IRegistry Global;
-        public readonly IRegistry Local;
-        internal KeyContext(IRegistry global, IRegistry local)
+        public readonly IRegistry PrimaryRegistry;
+        public readonly IRegistry PageRegistry;
+        public readonly IRegistry GropuRegistry;
+        internal KeyContext(
+            IRegistry primary,
+            IRegistry page,
+            IRegistry group)
         {
-            Global = global;
-            Local = local;
+            PrimaryRegistry = primary;
+            PageRegistry = page;
+            GropuRegistry = group;
         }
     }
 

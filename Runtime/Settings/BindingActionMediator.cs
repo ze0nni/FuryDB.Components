@@ -150,5 +150,33 @@ namespace FDB.Components.Settings
                 _excludeAxis[a] = Input.GetAxis(a) != 0;
             }
         }
+
+        public bool ReadTrigger(out ActionTrigger value)
+        {
+            foreach (var c in SettingsController.DefaultKeyCodes) {
+                if (Input.GetKey(c))
+                {
+                    value = c;
+                    return true;
+                }
+            }
+
+            foreach (var a in SettingsController.DefaultAxis)
+            {
+                var v = GetAxis(a);
+                if (v > 0)
+                {
+                    value = $"+{a}";
+                    return true;
+                }
+                if (v < 0)
+                {
+                    value = $"-{a}";
+                    return true;
+                }
+            }
+            value = default;
+            return false;
+        }
     }
 }

@@ -14,16 +14,16 @@ namespace FDB.Components.Settings
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Field, AllowMultiple = false)]
-    public sealed class BindingFilterAttributeAttribute : Attribute
+    public sealed class BindingFilterAttribute : Attribute
     {
         public BindingFilterFlags Flags;
-        public BindingFilterAttributeAttribute(BindingFilterFlags flags) => Flags = flags;
+        public BindingFilterAttribute(BindingFilterFlags flags) => Flags = flags;
 
         public static BindingFilterFlags Resolve(FieldInfo field)
         {
             var resultFlags = BindingFilterFlags.All;
 
-            var fieldAttr = field.GetCustomAttribute<BindingFilterAttributeAttribute>();
+            var fieldAttr = field.GetCustomAttribute<BindingFilterAttribute>();
             if (fieldAttr != null)
             {
                 return fieldAttr.Flags;
@@ -35,7 +35,7 @@ namespace FDB.Components.Settings
                 {
                     return;
                 }
-                var attr = parent.GetCustomAttribute<BindingFilterAttributeAttribute>();
+                var attr = parent.GetCustomAttribute<BindingFilterAttribute>();
                 if (attr != null)
                 {
                     flags = attr.Flags;

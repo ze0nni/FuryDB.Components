@@ -31,7 +31,7 @@ namespace FDB.Components.Settings
             FieldInfo keyField
             ) : base(group, keyField)
         {
-            FilterFlags = BindingFilterAttributeAttribute.Resolve(keyField);
+            FilterFlags = BindingFilterAttribute.Resolve(keyField);
 
             if (group.Page.PrimaryGameObject != null)
             {

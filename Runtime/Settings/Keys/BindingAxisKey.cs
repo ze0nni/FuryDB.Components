@@ -27,7 +27,7 @@ namespace FDB.Components.Settings
 
         public BindingAxisKey(KeyContext context, SettingsGroup<TKeyData> group, FieldInfo keyField) : base(group, keyField)
         {
-            FilterFlags = BindingFilterAttributeAttribute.Resolve(keyField);
+            FilterFlags = BindingFilterAttribute.Resolve(keyField);
 
             if (group.Page.PrimaryGameObject != null)
             {

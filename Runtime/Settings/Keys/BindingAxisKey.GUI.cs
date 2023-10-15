@@ -50,9 +50,7 @@ namespace FDB.Components.Settings
             var mediator = Group.Page.Controller.Registry.Get<BindingMediator>();
             return new ReadBindingAxisHandle(mediator, state, FilterFlags, close, (AxisTrigger t) =>
             {
-                var value = Value;
-                value.Triggers[triggerIndex] = t;
-                Value = value;
+                Value = Value.Update(triggerIndex, t);
             });
         }
     }

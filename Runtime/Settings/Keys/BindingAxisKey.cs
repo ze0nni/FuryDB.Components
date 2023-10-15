@@ -55,15 +55,15 @@ namespace FDB.Components.Settings
         protected override BindingAxis ValueFromJson(JsonTextReader reader)
         {
             var s = new JsonSerializer();
-            var v = s.Deserialize<BindingAxis>(reader);
-            return v;
+            var dto = s.Deserialize<BindingAxisDTO>(reader);
+            return dto.ToBinding();
         }
 
         protected override void ValueToJson(JsonTextWriter writer, BindingAxis value)
         {
             var s = new JsonSerializer();
             s.DefaultValueHandling = DefaultValueHandling.Ignore;
-            s.Serialize(writer, value);
+            s.Serialize(writer, value.ToDTO());
         }
 
         protected override object WriteValue(BindingAxis value)

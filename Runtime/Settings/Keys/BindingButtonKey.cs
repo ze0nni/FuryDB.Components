@@ -43,10 +43,7 @@ namespace FDB.Components.Settings
 
         protected override BindingButton ReadValue(object value)
         {
-            var def = (BindingButton)SettingsController.DefaultKeys.Read(this);
             var curr = (BindingButton)value;
-
-            curr = def + curr;
 
             return curr;
         }
@@ -59,15 +56,15 @@ namespace FDB.Components.Settings
         protected override BindingButton ValueFromJson(JsonTextReader reader)
         {
             var s = new JsonSerializer();
-            var v = s.Deserialize<BindingButton>(reader);
-            return v;
+            var dto = s.Deserialize<BindingButtonDTO>(reader);
+            return dto.ToBinding();
         }
 
         protected override void ValueToJson(JsonTextWriter writer, BindingButton value)
         {
             var s = new JsonSerializer();
             s.DefaultValueHandling = DefaultValueHandling.Ignore;
-            s.Serialize(writer, value);
+            s.Serialize(writer, value.ToDTO());
         }
 
         protected override object WriteValue(BindingButton value)

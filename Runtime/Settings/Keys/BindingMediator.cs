@@ -116,9 +116,9 @@ namespace FDB.Components.Settings
 
                 var pressed = false;
                 var lastPressed = b._presset;
-                for (var ti = 0; ti < b.Triggers.Length; ti++)
+                for (var ti = 0; ti < b._triggers.Length; ti++)
                 {
-                    if (GetPressed(ref b.Triggers[ti]))
+                    if (GetPressed(ref b._triggers[ti]))
                     {
                         pressed = true;
                         break;

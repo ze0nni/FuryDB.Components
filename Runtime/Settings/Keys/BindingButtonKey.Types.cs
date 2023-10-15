@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -8,7 +9,6 @@ namespace FDB.Components.Settings
 {
     public struct ButtonTrigger
     {
-        [JsonConverter(typeof(StringEnumConverter))]
         public KeyCode Key;
         public string Axis;
         public bool AxisPositive;
@@ -73,9 +73,19 @@ namespace FDB.Components.Settings
                 return $"Axis({(AxisPositive ? "+" : "-") }{Axis})";
             return "None";
         }
+
+        internal ButtonTriggerDTO ToDTO()
+        {
+            return new ButtonTriggerDTO
+            {
+                Key = Key,
+                Axis = Axis,
+                AxisPositive = AxisPositive
+            };
+        }
     }
 
-    public struct BindingButton : IEquatable<BindingButton>, ICloneable
+    public struct BindingButton : IEquatable<BindingButton>
     {
         public static BindingButton KeyMoveUp => Of(KeyCode.W, "-JoyY");
         public static BindingButton KeyMoveDown => Of(KeyCode.S, "+JoyY");
@@ -87,23 +97,30 @@ namespace FDB.Components.Settings
         public static BindingButton Of(params ButtonTrigger[] triggers)
         {
             var b = new BindingButton();
-            b.Triggers = triggers;
+            b._triggers = triggers.ToArray();
             return b;
         }
 
-        public ButtonTrigger[] Triggers;
+        internal ButtonTrigger[] _triggers;
+        public IReadOnlyList<ButtonTrigger> Triggers => _triggers;
+
+        public BindingButton Update(int index, ButtonTrigger trigger)
+        {
+            var b = Of(_triggers);
+            b._triggers[index] = trigger;
+            return b;
+        }
 
         internal bool _presset;
         internal bool _justPressed;
         internal bool _justReleased;
-        [JsonIgnore] public bool Pressed => _presset;
-        [JsonIgnore] public bool JustPressed => _justPressed;
-        [JsonIgnore] public bool JustReleased => _justReleased;
+        public bool Pressed => _presset;
+        public bool JustPressed => _justPressed;
+        public bool JustReleased => _justReleased;
 
         public bool Equals(BindingButton other)
         {
             return (ReferenceEquals(Triggers, other.Triggers)
-                || !(Triggers == null ^ other.Triggers == null)
                 || Enumerable.SequenceEqual(Triggers, other.Triggers));
         }
 
@@ -115,7 +132,7 @@ namespace FDB.Components.Settings
         public static BindingButton FromTriggers(params ButtonTrigger[] triggers)
         {
             var b = new BindingButton();
-            b.Triggers = triggers;
+            b._triggers = triggers.ToArray();
             return b;
         }
 
@@ -129,55 +146,48 @@ namespace FDB.Components.Settings
             return FromTriggers(triggers.t0, triggers.t1);
         }
 
-        public static BindingButton operator +(BindingButton def, BindingButton curr) {
-            curr = (BindingButton)curr.Clone();
-            
-            
-            Merge(ref curr.Triggers, ref def.Triggers, t => t.IsNull);
-            
-            return curr;
-
-            void Merge<T>(ref T[] currA, ref T[] defA, Predicate<T> isNull)
-            {
-                if (ReferenceEquals(currA, defA))
-                {
-                    return;
-                }
-                if (currA != null && defA == null)
-                {
-                    return;
-                }
-                if (currA == null)
-                {
-                    currA = defA.ToArray();
-                }
-                else if (currA.Length < defA.Length)
-                {
-                    var newCurr = new T[defA.Length];
-                    Array.Copy(currA, newCurr, currA.Length);
-                    currA = newCurr;
-                }
-                for (var i = 0; i < defA.Length; i++)
-                {
-                    if (isNull(currA[i]))
-                    {
-                        currA[i] = defA[i];
-                    }
-                }
-            }
-        }
-
         public override string ToString()
         {
             var args = Triggers == null ? "null" : string.Join(", ", Triggers);
             return $"BindingAction({ args })";
         }
 
-        public object Clone()
+        internal BindingButtonDTO ToDTO()
         {
-            var b = new BindingButton();
-            b.Triggers = Triggers?.ToArray();
-            return b;
+            return new BindingButtonDTO
+            {
+                Triggers = _triggers == null ? new ButtonTriggerDTO[0] : _triggers.Select(x => x.ToDTO()).ToArray()
+            };
+        }
+    }
+
+    internal struct BindingButtonDTO
+    {
+        public ButtonTriggerDTO[] Triggers;
+
+        public BindingButton ToBinding()
+        {
+            return new BindingButton
+            {
+                _triggers = Triggers == null ? new ButtonTrigger[0] : Triggers.Select(x => x.ToTrigger()).ToArray()
+            };
+        }
+    }
+
+    internal struct ButtonTriggerDTO
+    {
+        [JsonConverter(typeof(StringEnumConverter))] public KeyCode Key;
+        public string Axis;
+        public bool AxisPositive;
+
+        public ButtonTrigger ToTrigger()
+        {
+            return new ButtonTrigger
+            {
+                Key = Key,
+                Axis = Axis,
+                AxisPositive = AxisPositive
+            };
         }
     }
 }

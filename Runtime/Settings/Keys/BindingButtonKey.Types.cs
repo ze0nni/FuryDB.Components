@@ -102,9 +102,9 @@ namespace FDB.Components.Settings
 
         public bool Equals(BindingButton other)
         {
-            return (object.ReferenceEquals(Triggers, other.Triggers) 
+            return (ReferenceEquals(Triggers, other.Triggers)
+                || !(Triggers == null ^ other.Triggers == null)
                 || Enumerable.SequenceEqual(Triggers, other.Triggers));
-
         }
 
         public override int GetHashCode()

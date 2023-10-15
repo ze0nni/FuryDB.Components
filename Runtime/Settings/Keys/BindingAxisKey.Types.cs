@@ -51,7 +51,8 @@ namespace FDB.Components.Settings
 
         public bool Equals(BindingAxis other)
         {
-            return (object.ReferenceEquals(Triggers, other.Triggers)
+            return (ReferenceEquals(Triggers, other.Triggers)
+                || !(Triggers == null ^ other.Triggers == null)
                 || Enumerable.SequenceEqual(Triggers, other.Triggers));
         }
     }

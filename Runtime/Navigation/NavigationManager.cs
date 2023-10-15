@@ -69,7 +69,7 @@ namespace FDB.Components.Navigation
                 {
                     Down();
                 }
-                if (_leftBinding!= null && _leftBinding().CaptureJustPressed())
+                if (_leftBinding != null && _leftBinding().CaptureJustPressed())
                 {
                     Left();
                 }
@@ -85,6 +85,18 @@ namespace FDB.Components.Navigation
                 {
                     Cancel();
                 }
+            }
+            if (Input.GetMouseButton(0) || Input.GetMouseButton(1))
+            {
+                ClearSelection();
+            }
+        }
+
+        public void ClearSelection()
+        {
+            foreach (var g in _groups)
+            {
+                g.Select(null);
             }
         }
 

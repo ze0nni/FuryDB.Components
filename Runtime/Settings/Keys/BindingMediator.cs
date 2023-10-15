@@ -118,7 +118,7 @@ namespace FDB.Components.Settings
                 var lastPressed = b._presset;
                 for (var ti = 0; ti < b._triggers.Length; ti++)
                 {
-                    if (GetPressed(ref b._triggers[ti]))
+                    if (GetPressed(in b._triggers[ti]))
                     {
                         pressed = true;
                         break;
@@ -139,10 +139,28 @@ namespace FDB.Components.Settings
                     state.Setter(b);
                 }
             }
+
+            for (var i = 0; i < _axisCount; i++)
+            {
+                ref var state = ref _axis[i];
+                var b = state.Getter();
+
+                var v = 0f;
+                for (var ti = 0; ti < b._triggers.Length; ti++)
+                {
+                    v += GetAxisValue(in b._triggers[ti]);
+                }
+                v = v < -1 ? -1 : v > 1 ? 1 : v;
+                if (v != b._value)
+                {
+                    b._value = v;
+                    state.Setter(b);
+                }
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        bool GetPressed(ref ButtonTrigger t)
+        bool GetPressed(in ButtonTrigger t)
         {
             if (t.Key != KeyCode.None)
             {
@@ -153,6 +171,28 @@ namespace FDB.Components.Settings
                 return GetAxis(t.Axis) * (t.AxisPositive ? 1 : -1) > 0.25f;
             }
             return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        float GetAxisValue(in AxisTrigger t)
+        {
+            var v = 0f;
+            if (t.Axis != null)
+            {
+                v += GetAxis(t.Axis);
+            }
+            else if (t.Keys != default)
+            {
+                if (Input.GetKey(t.Keys.Neg))
+                {
+                    v -= 1;
+                }
+                if (Input.GetKey(t.Keys.Pos))
+                {
+                    v += 1;
+                }
+            }
+            return v;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

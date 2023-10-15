@@ -18,7 +18,7 @@ namespace FDB.Components.Navigation
         {
         }
 
-        NavigationItem _selected;
+        internal NavigationItem _selected;
 
         private void OnEnable()
         {
@@ -27,7 +27,8 @@ namespace FDB.Components.Navigation
 
         private void OnDisable()
         {
-            NavigationManager.Instance.RegisterGroup(this);
+            _selected = null;
+            NavigationManager.Instance.RemoveGroup(this);
         }
 
         readonly List<NavigationItem> _items = new List<NavigationItem>();

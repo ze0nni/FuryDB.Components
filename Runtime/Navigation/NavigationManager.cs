@@ -17,8 +17,8 @@ namespace FDB.Components.Navigation
             return go.AddComponent<NavigationManager>();
         });
 
-        readonly List<NavigationGroup> _groups = new List<NavigationGroup>();
-        NavigationGroup _active;
+        internal readonly List<NavigationGroup> _groups = new List<NavigationGroup>();
+        internal NavigationGroup _active;
 
         public delegate ref BindingButton BindingButtonDelegate();
         BindingButtonDelegate _upBinding;

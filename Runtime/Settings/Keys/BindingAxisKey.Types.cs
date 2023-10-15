@@ -68,11 +68,14 @@ namespace FDB.Components.Settings
         {
             _triggers = triggers.ToArray();
             _value = 0;
+            _rawValue = 0;
         }
 
         internal float _value;
         public float Value => _value;
 
+        internal float _rawValue;
+        public float RawValue => _rawValue;
 
         public bool Equals(BindingAxis other)
         {

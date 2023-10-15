@@ -150,10 +150,12 @@ namespace FDB.Components.Settings
                 {
                     v += GetAxisValue(in b._triggers[ti]);
                 }
+                var rawV = v;
                 v = v < -1 ? -1 : v > 1 ? 1 : v;
-                if (v != b._value)
+                if (v != b._value || rawV != b._rawValue)
                 {
                     b._value = v;
+                    b._rawValue = rawV;
                     state.Setter(b);
                 }
             }

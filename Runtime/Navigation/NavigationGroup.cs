@@ -1,17 +1,27 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.UI;
 
 namespace FDB.Components.Navigation
 {
     [RequireComponent(typeof(RectTransform))]
     public sealed class NavigationGroup : MonoBehaviour
     {
+        public GroupCancelEvent OnCancel;
+        [SerializeField] Button _cancelButton;
+
+        [Serializable]
+        public class GroupCancelEvent : UnityEvent
+        {
+        }
+
         NavigationItem _selected;
 
         private void OnEnable()
         {
-            _selected = null;
             NavigationManager.Instance.RegisterGroup(this);
         }
 
@@ -25,7 +35,7 @@ namespace FDB.Components.Navigation
         internal void RegisterItem(NavigationItem item)
         {
             _items.Add(item);
-            item.SetSelected(false);
+            item.SetSelected(_selected == item);
         }
 
         internal void RemoveItem(NavigationItem item)
@@ -62,9 +72,15 @@ namespace FDB.Components.Navigation
             Select(Find(new Vector2(1, 0)));
         }
 
-        public void Perform()
+        public void Success()
         {
-            _selected?.Perform();
+            _selected?.Success();
+        }
+
+        public void Cancel()
+        {
+            _cancelButton?.onClick?.Invoke();
+            OnCancel?.Invoke();
         }
 
         private NavigationItem Find(Vector2 direction)
@@ -90,6 +106,13 @@ namespace FDB.Components.Navigation
                 {
                     selectedRect = new Bounds(new Vector2(0, int.MinValue), Vector2.zero);
                 }
+                else if (direction.x > 0)
+                {
+                    selectedRect = new Bounds(new Vector2(int.MinValue, 0), Vector2.zero);
+                } else if (direction.x < 0)
+                {
+                    selectedRect = new Bounds(new Vector2(int.MaxValue, 0), Vector2.zero);
+                }
                 else
                 {
                     throw new System.NotImplementedException();
@@ -102,14 +125,22 @@ namespace FDB.Components.Navigation
                     rect: i.rect,
                     item: i.item,
                     vec: new Vector2(
-                        Mathf.Sign(i.rect.center.x - selectedRect.center.x),
-                        Mathf.Sign(i.rect.center.y - selectedRect.center.y))));
+                        i.rect.center.x - selectedRect.center.x,
+                        i.rect.center.y - selectedRect.center.y)))
+                .Select(i => (
+                    i.rect,
+                    i.item,
+                    vec: Mathf.Abs(i.vec.x) > Mathf.Abs(i.vec.y)
+                        ? new Vector2(Mathf.Sign(i.vec.x), 0)
+                        : new Vector2(0, Mathf.Sign(i.vec.y))));
+
             var filtered = all
                 .Where(i => direction.x == 0 || i.vec.x == direction.x)
                 .Where(i => direction.y == 0 || i.vec.y == direction.y);
 
             var sorted = filtered
-                .OrderBy(i => direction.x != 0 ? i.rect.center.x * direction.x : i.rect.center.y * direction.y);
+                .OrderBy(i => Vector2.Distance(i.rect.center, selectedRect.center));
+
             var next = sorted
                 .Select(i => i.item)
                 .FirstOrDefault();

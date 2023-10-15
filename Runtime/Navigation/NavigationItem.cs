@@ -9,10 +9,10 @@ namespace FDB.Components.Navigation
     public sealed class NavigationItem : MonoBehaviour
     {
         [SerializeField] GameObject[] _activateOnSelect;
-        [SerializeField] Button[] _buttonPerformers;
+        [SerializeField] Button _button;
 
         [SerializeField] public ItemSelectedChangedEvent OnSelectedChanged;
-        [SerializeField] public ItemPerformEvent OnPerform;
+        [SerializeField] public ItemSuccessEvent OnSuccess;
 
         [Serializable]
         public class ItemSelectedChangedEvent : UnityEvent
@@ -20,7 +20,7 @@ namespace FDB.Components.Navigation
         }
 
         [Serializable]
-        public class ItemPerformEvent : UnityEvent
+        public class ItemSuccessEvent : UnityEvent
         {
         }
 
@@ -63,13 +63,10 @@ namespace FDB.Components.Navigation
             OnSelectedChanged?.Invoke();
         }
 
-        internal void Perform()
+        internal void Success()
         {
-            foreach (var b in _buttonPerformers)
-            {
-                b.onClick?.Invoke();
-            }
-            OnPerform?.Invoke();
+            _button?.onClick?.Invoke();
+            OnSuccess?.Invoke();
         }
     }
 }

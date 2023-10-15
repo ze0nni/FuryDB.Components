@@ -52,9 +52,9 @@ namespace FDB.Components.Settings
             return b;
         }
 
-        public BindingAxis Append()
+        public BindingAxis Append(AxisTrigger trigger)
         {
-            return new BindingAxis(_triggers.Append(default).ToArray());
+            return new BindingAxis(_triggers.Append(trigger).ToArray());
         }
 
         public BindingAxis Delete(int index)

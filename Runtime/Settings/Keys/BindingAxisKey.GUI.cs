@@ -73,7 +73,7 @@ namespace FDB.Components.Settings
                                     }
                                     if (GUILayout.Button("Add"))
                                     {
-                                        Value = Value.Append();
+                                        Value = Value.Append(default);
                                         state.CloseWindow();
                                     }
                                 });
@@ -85,7 +85,7 @@ namespace FDB.Components.Settings
             {
                 if (GUILayout.Button("Add"))
                 {
-                    Value = Value.Append();
+                    Value = Value.Append(default);
                 }
             }
         }

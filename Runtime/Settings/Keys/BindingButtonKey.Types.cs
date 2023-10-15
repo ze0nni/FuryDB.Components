@@ -111,6 +111,18 @@ namespace FDB.Components.Settings
             return b;
         }
 
+        public BindingButton Append(ButtonTrigger trigger)
+        {
+            return Of(_triggers.Append(trigger).ToArray());
+        }
+
+        public BindingButton Delete(int index)
+        {
+            var list = _triggers.ToList();
+            list.RemoveAt(index);
+            return Of(list.ToArray());
+        }
+
         internal bool _presset;
         internal bool _justPressed;
         internal bool _justReleased;

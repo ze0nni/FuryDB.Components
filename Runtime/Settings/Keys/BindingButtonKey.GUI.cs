@@ -10,8 +10,12 @@ namespace FDB.Components.Settings
         protected internal override void OnFieldGUI(ISettingsGUIState state, float containerWidth)
         {
             var newValue = DirectValue;
-            if (newValue.Triggers == null)
+            if (newValue.Triggers == null || newValue.Triggers.Count == 0)
             {
+                if (GUILayout.Button("Add"))
+                {
+                    Value = Value.Append(default);
+                }
                 return;
             }
 
@@ -21,30 +25,66 @@ namespace FDB.Components.Settings
                 var index = i++;
                 if (GUILayout.Button(t.ToString()))
                 {
-                    var handle = ReadTrigger(state, index, state.CloseWindow);
+                    if (Event.current.button == 0)
+                    {
+                        var handle = ReadTrigger(state, index, state.CloseWindow);
 
-                    state.OpenWindow(
-                        Data.Name,
-                        state.RowHeight * 15, state.RowHeight * 3,
-                        true,
-                        () =>
-                        {
-                            GUILayout.FlexibleSpace();
-                            using (new GUILayout.HorizontalScope())
+                        state.OpenWindow(
+                            Data.Name,
+                            state.RowHeight * 15, state.RowHeight * 3,
+                            true,
+                            () =>
                             {
                                 GUILayout.FlexibleSpace();
-                                if (handle.First == null)
+                                using (new GUILayout.HorizontalScope())
                                 {
-                                    GUILayout.Label("Read input");
-                                }
-                                else
-                                {
-                                    GUILayout.Label($"Press {handle.First} again");
+                                    GUILayout.FlexibleSpace();
+                                    if (handle.First == null)
+                                    {
+                                        GUILayout.Label("Read input");
+                                    }
+                                    else
+                                    {
+                                        GUILayout.Label($"Press {handle.First} again");
+                                    }
+                                    GUILayout.FlexibleSpace();
                                 }
                                 GUILayout.FlexibleSpace();
-                            }
-                            GUILayout.FlexibleSpace();
-                        });
+                                if (GUILayout.Button("Cancel"))
+                                {
+                                    handle.Dispose();
+                                }
+                            });
+                    } else if (Event.current.button == 1)
+                    {
+                        state.ShowDropdownWindow(
+                                GuiRects.field,
+                                () =>
+                                {
+                                    GUILayout.Label(Value.Triggers[index].ToString(), GUI.skin.box, GUILayout.ExpandWidth(true));
+
+                                    if (index < DefaultValue.Triggers.Count && GUILayout.Button("Default"))
+                                    {
+                                        Value = Value.Update(index, DefaultValue.Triggers[index]);
+                                        state.CloseWindow();
+                                    }
+                                    if (GUILayout.Button("Set null"))
+                                    {
+                                        Value = Value.Update(index, default);
+                                        state.CloseWindow();
+                                    }
+                                    if (index >= DefaultValue.Triggers.Count && GUILayout.Button("Delete"))
+                                    {
+                                        Value = Value.Delete(index);
+                                        state.CloseWindow();
+                                    }
+                                    if (GUILayout.Button("Add"))
+                                    {
+                                        Value = Value.Append(default);
+                                        state.CloseWindow();
+                                    }
+                                });
+                    }
                 }
             }
         }

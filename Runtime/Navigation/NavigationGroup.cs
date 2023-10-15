@@ -98,20 +98,25 @@ namespace FDB.Components.Navigation
                 selectedRect = GetBouns(_selected);
             } else
             {
+                var allRects = _items.Select(GetBouns);
                 if (direction.y < 0)
                 {
-                    selectedRect = new Bounds(new Vector2(0, int.MaxValue), Vector2.zero);
+                    selectedRect = allRects.OrderByDescending(r => r.center.y).First();
+                    selectedRect.center += new Vector3(0, 1);
                 }
                 else if (direction.y > 0)
                 {
-                    selectedRect = new Bounds(new Vector2(0, int.MinValue), Vector2.zero);
+                    selectedRect = allRects.OrderBy(r => r.center.y).First();
+                    selectedRect.center -= new Vector3(0, 1);
                 }
                 else if (direction.x > 0)
                 {
-                    selectedRect = new Bounds(new Vector2(int.MinValue, 0), Vector2.zero);
+                    selectedRect = allRects.OrderBy(r => r.center.x).First();
+                    selectedRect.center -= new Vector3(1, 0);
                 } else if (direction.x < 0)
                 {
-                    selectedRect = new Bounds(new Vector2(int.MaxValue, 0), Vector2.zero);
+                    selectedRect = allRects.OrderByDescending(r => r.center.x).First();
+                    selectedRect.center += new Vector3(1, 0);
                 }
                 else
                 {

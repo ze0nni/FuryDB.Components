@@ -97,6 +97,7 @@ namespace FDB.Components.Settings
         public BindingButton(params ButtonTrigger[] triggers)
         {
             _triggers = triggers.ToArray();
+            _captured = false;
             _presset = false;
             _justPressed = false;
             _justReleased = false;
@@ -131,12 +132,43 @@ namespace FDB.Components.Settings
             return Of(list.ToArray());
         }
 
+        internal bool _captured;
         internal bool _presset;
         internal bool _justPressed;
         internal bool _justReleased;
-        public bool Pressed => _presset;
-        public bool JustPressed => _justPressed;
-        public bool JustReleased => _justReleased;
+        public bool Pressed => !_captured && _presset;
+        public bool JustPressed => !_captured && _justPressed;
+        public bool JustReleased => !_captured && _justReleased;
+
+        public bool CapturePressed()
+        {
+            if (!Pressed)
+            {
+                return false;
+            }
+            _captured = true;
+            return true;
+        }
+
+        public bool CaptureJustPressed()
+        {
+            if (!JustPressed)
+            {
+                return false;
+            }
+            _captured = true;
+            return true;
+        }
+
+        public bool CaptureJustReleased()
+        {
+            if (!JustReleased)
+            {
+                return false;
+            }
+            _captured = true;
+            return true;
+        }
 
         public bool Equals(BindingButton other)
         {

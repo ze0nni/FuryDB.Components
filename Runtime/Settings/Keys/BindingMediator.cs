@@ -127,12 +127,15 @@ namespace FDB.Components.Settings
                 var justPressed = !lastPressed && pressed;
                 var justReleased = lastPressed && !pressed;
 
-                changed = pressed != lastPressed
+                changed = 
+                    b._captured
+                    || pressed != lastPressed
                     || justPressed != b._justPressed
                     || justReleased != b._justReleased;
 
                 if (changed)
                 {
+                    b._captured = false;
                     b._presset = pressed;
                     b._justPressed = justPressed;
                     b._justReleased = justReleased;

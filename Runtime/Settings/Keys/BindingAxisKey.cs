@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using System;
 using System.Reflection;
 
 namespace FDB.Components.Settings
@@ -42,7 +43,10 @@ namespace FDB.Components.Settings
             var def = (BindingAxis)SettingsController.DefaultKeys.Read(this);
             var curr = (BindingAxis)value;
 
-            //TODO: curr = def + curr;
+            if (curr._triggers == null || curr._triggers.Length < def._triggers.Length)
+            {
+                Array.Resize(ref curr._triggers, def._triggers.Length);
+            }
 
             return curr;
         }

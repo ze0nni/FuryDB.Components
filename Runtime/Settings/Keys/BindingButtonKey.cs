@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using Newtonsoft.Json;
 
@@ -43,7 +44,13 @@ namespace FDB.Components.Settings
 
         protected override BindingButton ReadValue(object value)
         {
+            var def = (BindingButton)SettingsController.DefaultKeys.Read(this);
             var curr = (BindingButton)value;
+
+            if (curr._triggers == null || curr._triggers.Length < def._triggers.Length)
+            {
+                Array.Resize(ref curr._triggers, def._triggers.Length);
+            }
 
             return curr;
         }

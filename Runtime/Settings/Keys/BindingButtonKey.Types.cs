@@ -94,6 +94,14 @@ namespace FDB.Components.Settings
         public static BindingButton KeyFire => Of(KeyCode.Mouse0, KeyCode.Joystick1Button0);
         public static BindingButton KeyJump => Of(KeyCode.Space, KeyCode.Joystick1Button1);
 
+        public BindingButton(params ButtonTrigger[] triggers)
+        {
+            _triggers = triggers.ToArray();
+            _presset = false;
+            _justPressed = false;
+            _justReleased = false;
+        }
+
         public static BindingButton Of(params ButtonTrigger[] triggers)
         {
             var b = new BindingButton();

@@ -52,6 +52,18 @@ namespace FDB.Components.Settings
             return b;
         }
 
+        public BindingAxis Append()
+        {
+            return new BindingAxis(_triggers.Append(default).ToArray());
+        }
+
+        public BindingAxis Delete(int index)
+        {
+            var list = _triggers.ToList();
+            list.RemoveAt(index);
+            return new BindingAxis(list.ToArray());
+        }
+
         public BindingAxis(params AxisTrigger[] triggers)
         {
             _triggers = triggers.ToArray();

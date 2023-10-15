@@ -217,6 +217,7 @@ namespace FDB.Components.Settings
     {
         private TValue _value;
 
+        public TValue DefaultValue => (TValue)DefaultKeys.Read(this);
         protected TValue DirectValue => _value;
         public TValue Value
         {

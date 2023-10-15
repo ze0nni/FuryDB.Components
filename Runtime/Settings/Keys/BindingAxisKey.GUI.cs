@@ -9,38 +9,83 @@ namespace FDB.Components.Settings
         protected internal override void OnFieldGUI(ISettingsGUIState state, float containerWidth)
         {
             var value = DirectValue;
-            if (value.Triggers != null)
+            if (value.Triggers != null && value.Triggers.Count > 0)
             {
                 var i = 0;
                 foreach (var t in value.Triggers)
                 {
                     var index = i++;
-                    if (GUILayout.Button(t.ToString())) {
-                        var handle = ReadTrigger(state, index, state.CloseWindow);
-
-                        state.OpenWindow(
-                        Data.Name,
-                        state.RowHeight * 15, state.RowHeight * 3,
-                        true,
-                        () =>
+                    if (GUILayout.Button(t.ToString()))
+                    {
+                        if (Event.current.button == 0)
                         {
-                            GUILayout.FlexibleSpace();
-                            using (new GUILayout.HorizontalScope())
-                            {
-                                GUILayout.FlexibleSpace();
-                                if (handle.NegKey == null)
+                            var handle = ReadTrigger(state, index, state.CloseWindow);
+
+                            state.OpenWindow(
+                                Data.Name,
+                                state.RowHeight * 15, state.RowHeight * 4,
+                                true,
+                                () =>
                                 {
-                                    GUILayout.Label("Read input");
-                                }
-                                else
+                                    GUILayout.FlexibleSpace();
+                                    using (new GUILayout.HorizontalScope())
+                                    {
+                                        GUILayout.FlexibleSpace();
+                                        if (handle.NegKey == null)
+                                        {
+                                            GUILayout.Label("Read input");
+                                        }
+                                        else
+                                        {
+                                            GUILayout.Label($"{handle.NegKey} - ...");
+                                        }
+                                        GUILayout.FlexibleSpace();
+                                    }
+                                    GUILayout.FlexibleSpace();
+                                    if (GUILayout.Button("Cancel"))
+                                    {
+                                        handle.Dispose();
+                                    }
+                                });
+                        }
+                        else if (Event.current.button == 1)
+                        {
+                            state.ShowDropdownWindow(
+                                GuiRects.field,
+                                () =>
                                 {
-                                    GUILayout.Label($"{handle.NegKey} - ...");
-                                }
-                                GUILayout.FlexibleSpace();
-                            }
-                            GUILayout.FlexibleSpace();
-                        });
+                                    GUILayout.Label(Value.Triggers[index].ToString(), GUI.skin.box, GUILayout.ExpandWidth(true));
+
+                                    if (index < DefaultValue.Triggers.Count && GUILayout.Button("Default"))
+                                    {
+                                        Value = Value.Update(index, DefaultValue.Triggers[index]);
+                                        state.CloseWindow();
+                                    }
+                                    if (GUILayout.Button("Set null"))
+                                    {
+                                        Value = Value.Update(index, default);
+                                        state.CloseWindow();
+                                    }
+                                    if (index >= DefaultValue.Triggers.Count && GUILayout.Button("Delete"))
+                                    {
+                                        Value = Value.Delete(index);
+                                        state.CloseWindow();
+                                    }
+                                    if (GUILayout.Button("Add"))
+                                    {
+                                        Value = Value.Append();
+                                        state.CloseWindow();
+                                    }
+                                });
+                        }
                     }
+                }
+            }
+            else
+            {
+                if (GUILayout.Button("Add"))
+                {
+                    Value = Value.Append();
                 }
             }
         }

@@ -18,6 +18,7 @@ namespace FDB.Components.Navigation
 
         internal readonly List<NavigationGroup> _groups = new List<NavigationGroup>();
         internal NavigationGroup _active;
+        public NavigationGroup ActiveGroup => _active;
 
         internal void RegisterGroup(NavigationGroup group)
         {

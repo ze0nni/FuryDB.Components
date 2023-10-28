@@ -63,10 +63,11 @@ namespace FDB.Components.Navigation
             OnSelectedChanged?.Invoke();
         }
 
-        internal void Success()
+        internal bool Success()
         {
             _button?.onClick?.Invoke();
             OnSuccess?.Invoke();
+            return (_button?.onClick != null || OnSuccess != null);
         }
     }
 }

@@ -44,44 +44,49 @@ namespace FDB.Components.Navigation
             _items.Remove(item);
         }
 
-        internal void Select(NavigationItem item)
+        internal bool Select(NavigationItem item)
         {
+            var changed = _selected != item;
+
             _selected = item;
             foreach (var i in _items)
             {
                 i.SetSelected(i == item);
             }
+
+            return changed;
         }
 
-        public void Up()
+        public bool Up()
         {
-            Select(Find(new Vector2(0, 1)));
+            return Select(Find(new Vector2(0, 1)));
         }
 
-        public void Down()
+        public bool Down()
         {
-            Select(Find(new Vector2(0, -1)));
+            return Select(Find(new Vector2(0, -1)));
         }
 
-        public void Left()
+        public bool Left()
         {
-            Select(Find(new Vector2(-1, 0)));
+            return Select(Find(new Vector2(-1, 0)));
         }
 
-        public void Right()
+        public bool Right()
         {
-            Select(Find(new Vector2(1, 0)));
+            return Select(Find(new Vector2(1, 0)));
         }
 
-        public void Success()
+        public bool Success()
         {
-            _selected?.Success();
+            return _selected?.Success() ?? false;
         }
 
-        public void Cancel()
+        public bool Cancel()
         {
             _cancelButton?.onClick?.Invoke();
             OnCancel?.Invoke();
+            return (_cancelButton?.onClick != null || OnCancel != null);
         }
 
         private NavigationItem Find(Vector2 direction)

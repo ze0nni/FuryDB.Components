@@ -48,34 +48,34 @@ namespace FDB.Components.Navigation
             }
         }
 
-        public void Up()
+        public bool Up()
         {
-            _active?.Up();
+            return _active?.Up() ?? false;
         }
 
-        public void Down()
+        public bool Down()
         {
-            _active?.Down();
+            return _active?.Down() ?? false;
         }
 
-        public void Left()
+        public bool Left()
         {
-            _active?.Left();
+            return _active?.Left() ?? false;
         }
 
-        public void Right()
+        public bool  Right()
         {
-            _active?.Right();
+            return _active?.Right() ?? false;
         }
 
-        public void Success()
+        public bool Success()
         {
-            _active?.Success();
+            return _active?.Success() ?? false;
         }
 
-        public void Cancel()
+        public bool Cancel()
         {
-            _active?.Cancel();
+            return _active?.Cancel() ?? false;
         }
     }
 }

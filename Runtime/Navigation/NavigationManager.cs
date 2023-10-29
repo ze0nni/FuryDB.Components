@@ -49,7 +49,7 @@ namespace FDB.Components.Navigation
             }
 
             _active = newGroup;
-            OnActiveGroupChanged.Invoke(newGroup, oldGroup);
+            OnActiveGroupChanged?.Invoke(newGroup, oldGroup);
         }
 
         void OnSelectedItemChangedHandler(NavigationItem item, NavigationItem oldItem)

@@ -20,16 +20,41 @@ namespace FDB.Components.Navigation
         internal NavigationGroup _active;
         public NavigationGroup ActiveGroup => _active;
 
+        public event Action<NavigationGroup, NavigationGroup> OnActiveGroupChanged;
+        public event Action<NavigationGroup, NavigationItem, NavigationItem> OnSelectedItemChanged;
+
         internal void RegisterGroup(NavigationGroup group)
         {
             _groups.Add(group);
-            _active = group;
+            UpdateActiveGroup(group);
         }
 
         internal void RemoveGroup(NavigationGroup item)
         {
             _groups.Remove(item);
-            _active = _groups.LastOrDefault();
+            UpdateActiveGroup(_groups.LastOrDefault());
+        }
+
+        void UpdateActiveGroup(NavigationGroup newGroup)
+        {
+            var oldGroup = _active;
+
+            if (oldGroup != null)
+            {
+                oldGroup.OnSelectedItemChanged -= OnSelectedItemChangedHandler;
+            }
+            if (newGroup != null)
+            {
+                newGroup.OnSelectedItemChanged += OnSelectedItemChangedHandler;
+            }
+
+            _active = newGroup;
+            OnActiveGroupChanged.Invoke(newGroup, oldGroup);
+        }
+
+        void OnSelectedItemChangedHandler(NavigationItem item, NavigationItem oldItem)
+        {
+            OnSelectedItemChanged?.Invoke(_active, item, oldItem);
         }
 
         private void Update()

@@ -20,6 +20,8 @@ namespace FDB.Components.Navigation
 
         internal NavigationItem _selected;
 
+        public event Action<NavigationItem, NavigationItem> OnSelectedItemChanged;
+
         private void OnEnable()
         {
             NavigationManager.Instance.RegisterGroup(this);
@@ -48,10 +50,16 @@ namespace FDB.Components.Navigation
         {
             var changed = _selected != item;
 
+            var oldItem = _selected;
             _selected = item;
             foreach (var i in _items)
             {
                 i.SetSelected(i == item);
+            }
+
+            if (changed && OnSelectedItemChanged != null)
+            {
+                OnSelectedItemChanged.Invoke(item, oldItem);
             }
 
             return changed;

@@ -65,9 +65,24 @@ namespace FDB.Components.Navigation
 
         internal bool Success()
         {
-            _button?.onClick?.Invoke();
-            OnSuccess?.Invoke();
-            return (_button?.onClick != null || OnSuccess != null);
+            var perform = false;
+
+            if (_button != null
+                && _button.gameObject.activeInHierarchy
+                && _button.IsInteractable()
+                && _button.onClick != null)
+            {
+                _button.onClick.Invoke();
+                perform = true;
+            }
+
+            if (OnSuccess != null && OnSuccess.GetPersistentEventCount() > 0)
+            {
+                OnSuccess.Invoke();
+                perform = true;
+            }
+
+            return perform;
         }
     }
 }

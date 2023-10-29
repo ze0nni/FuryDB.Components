@@ -84,9 +84,24 @@ namespace FDB.Components.Navigation
 
         public bool Cancel()
         {
-            _cancelButton?.onClick?.Invoke();
-            OnCancel?.Invoke();
-            return (_cancelButton?.onClick != null || OnCancel != null);
+            var perform = false;
+
+            if (_cancelButton != null
+                && _cancelButton.gameObject.activeInHierarchy
+                && _cancelButton.IsInteractable()
+                && _cancelButton.onClick != null)
+            {
+                _cancelButton.onClick.Invoke();
+                perform = true;
+            }
+
+            if (OnCancel != null && OnCancel.GetPersistentEventCount() > 0)
+            {
+                OnCancel.Invoke();
+                perform = true;
+            }
+
+            return perform;
         }
 
         private NavigationItem Find(Vector2 direction)

@@ -63,6 +63,10 @@ namespace FDB.Components.Navigation
             {
                 ClearSelection();
             }
+
+#if FURY_PERSISTENT_EXISTS
+            UpdateBindings();
+#endif
         }
 
         public void ClearSelection()
@@ -72,6 +76,64 @@ namespace FDB.Components.Navigation
                 g.Select(null);
             }
         }
+
+#if FURY_PERSISTENT_EXISTS
+        public delegate ref Fury.Settings.BindingButton BindingButtonDelegate();
+        BindingButtonDelegate _upBinding;
+        BindingButtonDelegate _downBinding;
+        BindingButtonDelegate _leftBinding;
+        BindingButtonDelegate _rightBinding;
+        BindingButtonDelegate _successBinding;
+        BindingButtonDelegate _cancelBinding;
+
+        public void Bind(
+            BindingButtonDelegate up = null,
+            BindingButtonDelegate down = null,
+            BindingButtonDelegate left = null,
+            BindingButtonDelegate right = null,
+            BindingButtonDelegate success = null,
+            BindingButtonDelegate cancel = null
+            )
+        {
+            _upBinding = up;
+            _downBinding = down;
+            _leftBinding = left;
+            _rightBinding = right;
+            _successBinding = success;
+            _cancelBinding = cancel;
+        }
+
+        public void UpdateBindings()
+        {
+            if (_active != null)
+            {
+                if (_upBinding != null && _upBinding().CaptureJustPressed())
+                {
+                    Up();
+                }
+                if (_downBinding != null && _downBinding().CaptureJustPressed())
+                {
+                    Down();
+                }
+                if (_leftBinding != null && _leftBinding().CaptureJustPressed())
+                {
+                    Left();
+                }
+                if (_rightBinding != null && _rightBinding().CaptureJustPressed())
+                {
+                    Right();
+                }
+                if (_successBinding != null && _successBinding().CaptureJustPressed())
+                {
+                    Success();
+                }
+                if (_cancelBinding != null && _cancelBinding().CaptureJustPressed())
+                {
+                    Cancel();
+                }
+            }
+        }
+#endif
 
         public bool Up()
         {

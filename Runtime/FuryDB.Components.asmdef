@@ -4,7 +4,8 @@
     "references": [
         "Fury.Strings",
         "FuryDB",
-        "FuryDB.Editor"
+        "FuryDB.Editor",
+        "Fury.Persistent"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -13,6 +14,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.pixelrebels.fury.persistent",
+            "expression": "",
+            "define": "FURY_PERSISTENT_EXISTS"
+        }
+    ],
     "noEngineReferences": false
 }

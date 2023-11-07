@@ -8,7 +8,7 @@
   "displayName": "FuryDB Components",
   "description": "Unity Components for integration with FuryDB\n\nDependencies:\n- https://github.com/ze0nni/FDB.git\n- https://github.com/ze0nni/FuryStrings.git",
   "category": "Components",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "keywords": [
     "text",
     "localization"

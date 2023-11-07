@@ -1,5 +1,6 @@
 using FDB.Components.Text;
 using Fury.Strings;
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -11,6 +12,8 @@ namespace FDB.Components
     {
         [SerializeField] TextValueBase<TDB, TConfig, TTextResolver> _text;
         Args _args;
+        Action _clearArgs;
+        string _currentString;
 
         public Args Args
         {
@@ -18,9 +21,9 @@ namespace FDB.Components
             {
                 if (_args == null)
                 {
-                    _args = new Args(SetDirty);
+                    _args = new Args(out _clearArgs, SetDirty);
                 }
-                _args.Clear();
+                _clearArgs();
                 return _args;
             }
         }
@@ -60,7 +63,7 @@ namespace FDB.Components
             SetDirty();
         }
 #endif
-        protected virtual ITextProcessor GetProcessor() => null;
+        protected virtual ITextProcessor GetProcessor() => ZeroTextProcessorDefault.Instance;
 
         protected abstract void Render(string text);
 
@@ -105,19 +108,28 @@ namespace FDB.Components
                 format = _text.Value;
             }
 
-            string text;
             var processor = GetProcessor();
+            string newString;
             if (processor == null)
             {
-                text = _args != null && _args.Length > 0
+                newString = _args != null && _args.Length > 0
                     ? string.Format(format, _args.ToObjectsArray())
                     : format;
             } else
             {
-                text = processor.Execute(format, _args, _variableProcessor);
+                newString = processor.Execute(format,
+                    currentString: _currentString,
+                    args: _args, 
+                    variableProcessor: _variableProcessor);
             }
 
-            Render(text);
+            if (ReferenceEquals(_currentString, newString))
+            {
+                return;
+            }
+            _currentString = newString;
+
+            Render(_currentString);
         }
 
         private class RenderTask : IEnumerator

@@ -20,6 +20,6 @@
   "type": "tool",
   "dependencies": {
     "com.pixelrebels.fdb": "0.5.0",
-    "com.pixelrebels.fury.strings": "0.0.1"
+    "com.pixelrebels.fury.strings": "0.0.2"
   }
 }

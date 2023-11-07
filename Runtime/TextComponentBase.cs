@@ -3,11 +3,13 @@ using Fury.Strings;
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace FDB.Components
 {
     public interface ITextComponent
     {
+        Transform transform { get; }
         void Render();
     }
 

@@ -22,6 +22,7 @@ namespace FDB.Components.Text
 
         public string Execute(
             string format,
+            string currentString = null,
             Args args = null, 
             VariableProcessorDelegate variableProcessor = null)
         {
@@ -36,7 +37,7 @@ namespace FDB.Components.Text
                 colorsMap: _colorsMap,
                 tagsAlias: _tagsAlias,
                 tagsProcessor: _tagsProcessor);
-            var result = _format.ToString();
+            var result = _format.ToString(currentString);
 
             _currentVariableProcessor = null;
 

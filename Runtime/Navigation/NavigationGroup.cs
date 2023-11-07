@@ -20,6 +20,8 @@ namespace FDB.Components.Navigation
 
         internal NavigationItem _selected;
 
+        public event Action<NavigationItem, NavigationItem> OnSelectedItemChanged;
+
         private void OnEnable()
         {
             NavigationManager.Instance.RegisterGroup(this);
@@ -44,44 +46,70 @@ namespace FDB.Components.Navigation
             _items.Remove(item);
         }
 
-        internal void Select(NavigationItem item)
+        internal bool Select(NavigationItem item)
         {
+            var changed = _selected != item;
+
+            var oldItem = _selected;
             _selected = item;
             foreach (var i in _items)
             {
                 i.SetSelected(i == item);
             }
+
+            if (changed && OnSelectedItemChanged != null)
+            {
+                OnSelectedItemChanged.Invoke(item, oldItem);
+            }
+
+            return changed;
         }
 
-        public void Up()
+        public bool Up()
         {
-            Select(Find(new Vector2(0, 1)));
+            return Select(Find(new Vector2(0, 1)));
         }
 
-        public void Down()
+        public bool Down()
         {
-            Select(Find(new Vector2(0, -1)));
+            return Select(Find(new Vector2(0, -1)));
         }
 
-        public void Left()
+        public bool Left()
         {
-            Select(Find(new Vector2(-1, 0)));
+            return Select(Find(new Vector2(-1, 0)));
         }
 
-        public void Right()
+        public bool Right()
         {
-            Select(Find(new Vector2(1, 0)));
+            return Select(Find(new Vector2(1, 0)));
         }
 
-        public void Success()
+        public bool Success()
         {
-            _selected?.Success();
+            return _selected?.Success() ?? false;
         }
 
-        public void Cancel()
+        public bool Cancel()
         {
-            _cancelButton?.onClick?.Invoke();
-            OnCancel?.Invoke();
+            var perform = false;
+
+            if (_cancelButton != null
+                && _cancelButton.gameObject.activeInHierarchy
+                && _cancelButton.IsInteractable()
+                && _cancelButton.onClick != null)
+            {
+                _cancelButton.onClick.Invoke();
+                perform = true;
+            }
+
+            if (OnCancel != null && OnCancel.GetPersistentEventCount() > 0)
+            {
+                OnCancel.Invoke();
+                perform = true;
+            }
+
+            return perform;
         }
 
         private NavigationItem Find(Vector2 direction)

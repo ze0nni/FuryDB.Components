@@ -125,7 +125,7 @@ namespace FDB.Components.Editor
                         },
                         GetKinds = () =>
                         {
-                            return index.All().Cast<object>().Select(o => ((Kind)configKind.GetValue(o)).Value);
+                            return index.Cast<object>().Select(o => ((Kind)configKind.GetValue(o)).Value);
                         }
                     };
                 } catch (Exception exc)

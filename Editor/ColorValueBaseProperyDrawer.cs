@@ -151,7 +151,7 @@ namespace FDB.Components.Editor
                             {
                                 return null;
                             }
-                            return index.All().Cast<object>().Select(o => ((Kind)configKind.GetValue(o)).Value);
+                            return index.Cast<object>().Select(o => ((Kind)configKind.GetValue(o)).Value);
                         },
                         GetColors = kind =>
                         {

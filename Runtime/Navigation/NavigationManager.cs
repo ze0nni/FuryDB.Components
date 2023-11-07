@@ -20,16 +20,41 @@ namespace FDB.Components.Navigation
         internal NavigationGroup _active;
         public NavigationGroup ActiveGroup => _active;
 
+        public event Action<NavigationGroup, NavigationGroup> OnActiveGroupChanged;
+        public event Action<NavigationGroup, NavigationItem, NavigationItem> OnSelectedItemChanged;
+
         internal void RegisterGroup(NavigationGroup group)
         {
             _groups.Add(group);
-            _active = group;
+            UpdateActiveGroup(group);
         }
 
         internal void RemoveGroup(NavigationGroup item)
         {
             _groups.Remove(item);
-            _active = _groups.LastOrDefault();
+            UpdateActiveGroup(_groups.LastOrDefault());
+        }
+
+        void UpdateActiveGroup(NavigationGroup newGroup)
+        {
+            var oldGroup = _active;
+
+            if (oldGroup != null)
+            {
+                oldGroup.OnSelectedItemChanged -= OnSelectedItemChangedHandler;
+            }
+            if (newGroup != null)
+            {
+                newGroup.OnSelectedItemChanged += OnSelectedItemChangedHandler;
+            }
+
+            _active = newGroup;
+            OnActiveGroupChanged?.Invoke(newGroup, oldGroup);
+        }
+
+        void OnSelectedItemChangedHandler(NavigationItem item, NavigationItem oldItem)
+        {
+            OnSelectedItemChanged?.Invoke(_active, item, oldItem);
         }
 
         private void Update()
@@ -38,6 +63,10 @@ namespace FDB.Components.Navigation
             {
                 ClearSelection();
             }
+
+#if FURY_PERSISTENT_EXISTS
+            UpdateBindings();
+#endif
         }
 
         public void ClearSelection()
@@ -48,34 +77,92 @@ namespace FDB.Components.Navigation
             }
         }
 
-        public void Up()
+#if FURY_PERSISTENT_EXISTS
+        public delegate ref Fury.Settings.BindingButton BindingButtonDelegate();
+        BindingButtonDelegate _upBinding;
+        BindingButtonDelegate _downBinding;
+        BindingButtonDelegate _leftBinding;
+        BindingButtonDelegate _rightBinding;
+        BindingButtonDelegate _successBinding;
+        BindingButtonDelegate _cancelBinding;
+
+        public void Bind(
+            BindingButtonDelegate up = null,
+            BindingButtonDelegate down = null,
+            BindingButtonDelegate left = null,
+            BindingButtonDelegate right = null,
+            BindingButtonDelegate success = null,
+            BindingButtonDelegate cancel = null
+            )
         {
-            _active?.Up();
+            _upBinding = up;
+            _downBinding = down;
+            _leftBinding = left;
+            _rightBinding = right;
+            _successBinding = success;
+            _cancelBinding = cancel;
         }
 
-        public void Down()
+        public void UpdateBindings()
         {
-            _active?.Down();
+            if (_active != null)
+            {
+                if (_upBinding != null && _upBinding().CaptureJustPressed())
+                {
+                    Up();
+                }
+                if (_downBinding != null && _downBinding().CaptureJustPressed())
+                {
+                    Down();
+                }
+                if (_leftBinding != null && _leftBinding().CaptureJustPressed())
+                {
+                    Left();
+                }
+                if (_rightBinding != null && _rightBinding().CaptureJustPressed())
+                {
+                    Right();
+                }
+                if (_successBinding != null && _successBinding().CaptureJustPressed())
+                {
+                    Success();
+                }
+                if (_cancelBinding != null && _cancelBinding().CaptureJustPressed())
+                {
+                    Cancel();
+                }
+            }
+        }
+#endif
+
+        public bool Up()
+        {
+            return _active?.Up() ?? false;
         }
 
-        public void Left()
+        public bool Down()
         {
-            _active?.Left();
+            return _active?.Down() ?? false;
         }
 
-        public void Right()
+        public bool Left()
         {
-            _active?.Right();
+            return _active?.Left() ?? false;
         }
 
-        public void Success()
+        public bool  Right()
         {
-            _active?.Success();
+            return _active?.Right() ?? false;
         }
 
-        public void Cancel()
+        public bool Success()
         {
-            _active?.Cancel();
+            return _active?.Success() ?? false;
+        }
+
+        public bool Cancel()
+        {
+            return _active?.Cancel() ?? false;
         }
     }
 }

@@ -6,6 +6,10 @@ namespace FDB.Components.Text
 
     public interface ITextProcessor
     {
-        string Execute(string format, Args args = null, VariableProcessorDelegate variableProcessor = null);
+        string Execute(
+            string format,
+            string currentString = null,
+            Args args = null,
+            VariableProcessorDelegate variableProcessor = null);
     }
 }

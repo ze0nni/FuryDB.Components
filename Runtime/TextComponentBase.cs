@@ -6,7 +6,12 @@ using UnityEngine;
 
 namespace FDB.Components
 {
-    public abstract class TextComponentBase<TDB, TConfig, TTextResolver> : MonoBehaviour
+    public interface ITextComponent
+    {
+        void Render();
+    }
+
+    public abstract class TextComponentBase<TDB, TConfig, TTextResolver> : MonoBehaviour, ITextComponent
         where TConfig : class
         where TTextResolver : struct, ITextResolver<TConfig>
     {
@@ -85,16 +90,10 @@ namespace FDB.Components
             {
                 return;
             }
-            if (_render == null)
-            {
-                _render = new RenderTask(this);
-            }
-            _render.Reset();
-
-            StartCoroutine(_render);
+            TextComponentRenderer.Render(this);
         }
 
-        void Render()
+        void ITextComponent.Render()
         {
             _isDirty = false;
 
@@ -130,39 +129,6 @@ namespace FDB.Components
             _currentString = newString;
 
             Render(_currentString);
-        }
-
-        private class RenderTask : IEnumerator
-        {
-            readonly TextComponentBase<TDB, TConfig, TTextResolver> _text;
-
-            public RenderTask(TextComponentBase<TDB, TConfig, TTextResolver> text)
-            {
-                _text = text;
-            }
-
-            int _index;
-
-            public object Current => null;
-
-            public bool MoveNext()
-            {
-                switch (_index++)
-                {
-                    case 0:
-                        return true;
-                    case 1:
-                        _text.Render();
-                        return false;
-                    default:
-                        return false;
-                }
-            }
-
-            public void Reset()
-            {
-                _index = 0;
-            }
         }
     }
 

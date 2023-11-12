@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FDB.Components
 {
     [Serializable]
-    public abstract class ColorValueBase<TDB, TConfig, TColorResolver> 
+    public sealed class ColorValueBase<TDB, TConfig, TColorResolver> 
         where TConfig : class 
         where TColorResolver : struct, IColorResolver<TConfig>
     {
@@ -23,7 +23,7 @@ namespace FDB.Components
                 Index<TConfig> index;
 #if UNITY_EDITOR
                 index = Application.isPlaying
-                    ? default(TColorResolver).Index
+                    ? default(TColorResolver).ColorIndex
                     : (Index<TConfig>)FDB.Editor.EditorDB<TDB>.Resolver.GetIndex(typeof(TConfig));
 #else
                 index = default(TColorResolver).Index;
@@ -57,7 +57,7 @@ namespace FDB.Components
     public interface IColorResolver<TConfig> 
         where TConfig : class
     {
-        Index<TConfig> Index { get; }
+        Index<TConfig> ColorIndex { get; }
         Color GetColor(TConfig config);
         Color[] GetColors(TConfig config);
     }

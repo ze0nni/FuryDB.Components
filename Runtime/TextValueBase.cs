@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FDB.Components
 {
     [Serializable]
-    public class TextValueBase<TDB, TConfig, TTextResolver>
+    public sealed class TextValueBase<TDB, TConfig, TTextResolver>
         where TConfig : class
         where TTextResolver : struct, ITextResolver<TConfig>
     {
@@ -25,7 +25,7 @@ namespace FDB.Components
             Index<TConfig> index;
 #if UNITY_EDITOR
             index = Application.isPlaying
-                ? default(TTextResolver).Index
+                ? default(TTextResolver).TextIndex
                 : (Index<TConfig>)FDB.Editor.EditorDB<TDB>.Resolver.GetIndex(typeof(TConfig));
 #else
                 index = default(TTextResolver).Index;

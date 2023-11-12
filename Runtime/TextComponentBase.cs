@@ -3,7 +3,6 @@ using Fury.Strings;
 using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace FDB.Components
 {
@@ -13,14 +12,18 @@ namespace FDB.Components
         void Render();
     }
 
-    public abstract class TextComponentBase<TDB, TConfig, TTextResolver> : MonoBehaviour, ITextComponent
-        where TConfig : class
-        where TTextResolver : struct, ITextResolver<TConfig>
+    public abstract partial class TextComponentBase<TDB, TTextConfig, TColorConfig, TResolver> : MonoBehaviour, ITextComponent
+        where TTextConfig : class
+        where TColorConfig : class
+        where TResolver : struct, ITextResolver<TTextConfig>, IColorResolver<TColorConfig>
     {
-        [SerializeField] TextValueBase<TDB, TConfig, TTextResolver> _text;
+        [SerializeField] TextValueBase<TDB, TTextConfig, TResolver> _text;
+        [SerializeField] ColorValueBase<TDB, TColorConfig, TResolver> _color;
+
         Args _args;
         Action _clearArgs;
         string _currentString;
+        Color _currentColor;
 
         public Args Args
         {
@@ -51,10 +54,22 @@ namespace FDB.Components
             SetDirty();
         }
 
-        public void SetText(Kind<TConfig> kind)
+        public void SetText(Kind<TTextConfig> kind)
         {
             _text.Translate = true;
             _text.Value = kind.Value;
+            SetDirty();
+        }
+
+        public void SetColor(Color color)
+        {
+            _color.SetColor(color);
+            SetDirty();
+        }
+
+        public void SetColor(Kind<TColorConfig> color)
+        {
+            _color.SetColor(color);
             SetDirty();
         }
 
@@ -70,9 +85,9 @@ namespace FDB.Components
             SetDirty();
         }
 #endif
-        protected virtual ITextProcessor GetProcessor() => ZeroTextProcessorDefault.Instance;
+        protected virtual ITextProcessor GetProcessor() => GetDefaultProcessor();
 
-        protected abstract void Render(string text);
+        protected abstract void Render(string text, Color color);
 
         private bool _isDirty = false;
         private IEnumerator _render;
@@ -124,20 +139,22 @@ namespace FDB.Components
                     variableProcessor: _variableProcessor);
             }
 
-            if (ReferenceEquals(_currentString, newString))
+            var newColor = _color.Color;
+            if (ReferenceEquals(_currentString, newString) && _currentColor == newColor)
             {
                 return;
             }
             _currentString = newString;
+            _currentColor = newColor;
 
-            Render(_currentString);
+            Render(_currentString, newColor);
         }
     }
 
     public interface ITextResolver<TConfig>
         where TConfig : class
     {
-        Index<TConfig> Index { get; }
+        Index<TConfig> TextIndex { get; }
         string GetText(TConfig config);
     }
 }

@@ -27,7 +27,7 @@ namespace FDB.Components
                     ? default(TColorResolver).ColorIndex
                     : (Index<TConfig>)FDB.Editor.EditorDB<TDB>.Resolver.GetIndex(typeof(TConfig));
 #else
-                index = default(TColorResolver).Index;
+                index = default(TColorResolver).ColorIndex;
 #endif
                 if (index == null)
                 {

@@ -28,7 +28,7 @@ namespace FDB.Components
                 ? default(TTextResolver).TextIndex
                 : (Index<TConfig>)FDB.Editor.EditorDB<TDB>.Resolver.GetIndex(typeof(TConfig));
 #else
-                index = default(TTextResolver).Index;
+                index = default(TTextResolver).TextIndex;
 #endif
             if (index == null)
             {

@@ -44,5 +44,22 @@ namespace FDB.Components
             text = default(TTextResolver).GetText(config);
             return true;
         }
+
+        public static implicit operator TextValueBase<TDB, TConfig, TTextResolver>(string text)
+        {
+            return new TextValueBase<TDB, TConfig, TTextResolver>
+            {
+                Value = text
+            };
+        }
+
+        public static implicit operator TextValueBase<TDB, TConfig, TTextResolver>(Kind<TConfig> kind)
+        {
+            return new TextValueBase<TDB, TConfig, TTextResolver>
+            {
+                Translate = true,
+                Value = kind.Value
+            };
+        }
     }
 }

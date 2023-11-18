@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace FDB.Components
@@ -51,6 +52,23 @@ namespace FDB.Components
         {
             _raw = false;
             _value = kind.Value;
+        }
+
+        public static implicit operator ColorValueBase<TDB, TConfig, TColorResolver>(Color color)
+        {
+            return new ColorValueBase<TDB, TConfig, TColorResolver>
+            {
+                _raw = true,
+                _rawValue = color
+            };
+        }
+
+        public static implicit operator ColorValueBase<TDB, TConfig, TColorResolver>(Kind<TConfig> kind)
+        {
+            return new ColorValueBase<TDB, TConfig, TColorResolver>
+            {
+                _value = kind.Value,
+            };
         }
     }
 

@@ -1,5 +1,6 @@
 using FDB.Components.Text;
 using Fury.Strings;
+using UnityEngine;
 
 namespace FDB.Components
 {
@@ -24,8 +25,17 @@ namespace FDB.Components
         {
             protected override void LoadColors(TDB db, ref ColorsMap map)
             {
+                Index<TColorConfig> index;
+#if UNITY_EDITOR
+                index = Application.isPlaying
+                    ? default(TResolver).ColorIndex
+                    : (Index < TColorConfig > )FDB.Editor.EditorDB<TDB>.Resolver.GetIndex(typeof(TColorConfig));
+#else
+                index = default(TResolver).ColorIndex;
+#endif
+
                 var kindField = typeof(TColorConfig).GetField("Kind");
-                foreach (var config in default(TResolver).ColorIndex)
+                foreach (var config in index)
                 {
                     var kind = (Kind)kindField.GetValue(config);
                     var color = default(TResolver).GetColor(config);
@@ -40,9 +50,18 @@ namespace FDB.Components
 
             protected override void LoadTagsProcessor(TDB db, ref TagsProcessorMap map)
             {
+                Index<TTextConfig> index;
+#if UNITY_EDITOR
+                index = Application.isPlaying
+                    ? default(TResolver).TextIndex
+                    : (Index<TTextConfig>)FDB.Editor.EditorDB<TDB>.Resolver.GetIndex(typeof(TTextConfig));
+#else
+                index = default(TResolver).TextIndex;
+#endif
+
                 var textMap = new StringDictionary<TTextConfig>();
                 var kindField = typeof(TTextConfig).GetField("Kind");
-                foreach (var config in default(TResolver).TextIndex)
+                foreach (var config in index)
                 {
                     var kind = (Kind)kindField.GetValue(config);
                     textMap[kind.Value] = config;
